@@ -1,3 +1,3 @@
 libreactor
-==========
-Wrapper library for event-dispatching system calls using Reactor pattern
+==============
+An event-dispatching library for fun.
