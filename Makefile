@@ -1,7 +1,3 @@
-#libreactor.so : Reactor.o ReactorImpl.o
-#	
-#########################################
-
 GXX = g++
 DEBUG_FLAG = -ggdb
 STATIC_LIB = libreactor.a
@@ -16,15 +12,15 @@ $(STATIC_LIB): Reactor.o ReactorImpl.o
 $(DYNAMIC_LIB): Reactor.o ReactorImpl.o
 	ld -G libs/*.o -o libs/$(DYNAMIC_LIB)
 
-Reactor.o : Reactor.cpp
+Reactor.o : src/Reactor.cpp
 	$(GXX) $(DEBUG_FLAG) -c src/Reactor.cpp -I$(FASTFORMAT_ROOT)/include -I$(STLSOFT)/include
 	mv Reactor.o libs/
 
-ReactorImpl.o : ReactorImpl.cpp
+ReactorImpl.o : src/ReactorImpl.cpp
 	$(GXX) $(DEBUG_FLAG) -c src/ReactorImpl.cpp -I$(FASTFORMAT_ROOT)/include -I$(STLSOFT)/include
 	mv ReactorImpl.o libs/
 
-all: mk_dir $(TARGET_LIB)
+all: mk_dir $(STATIC_LIB) $(DYNAMIC_LIB)
 
 clean:
 	rm libs/*.o libs/$(STATIC_LIB) libs/$(DYNAMIC_LIB)
@@ -46,8 +42,8 @@ INCLUDE_PATH = -I$(FASTFORMAT_ROOT)/include \
 $(TEST_PROG) : test.o
 	$(GXX) $(DEBUG_FLAG) -o $(TEST_PROG) test.o $(LIBS_PATH) $(LIBS)
 
-main.o : test.cpp
-	$(GXX) $(DEBUG_FLAG) -c test.cpp 
+test.o : test/test.cpp
+	$(GXX) $(DEBUG_FLAG) -c test/test.cpp 
 
 clean:
 	rm $(TEST_PROG) *.o
