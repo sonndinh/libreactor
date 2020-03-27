@@ -12,12 +12,8 @@
  *
  * =====================================================================================
  */
-#ifndef _Reactor_h_
-#define _Reactor_h_
-
-//#include <pantheios/pantheios.hpp>
-//#include <pantheios/frontends/stock.h>
-//#include <pantheios/inserters.hpp>
+#ifndef REACTOR_H_
+#define REACTOR_H_
 
 #include <sys/socket.h>
 #include <stdio.h>
@@ -25,9 +21,9 @@
 #include <errno.h>
 #include <ctype.h>
 #include <string.h>
-#include "SocketWF.h"
-#include "ReactorType.h"
-#include "ReactorImpl.h"
+#include "socket_wf.h"
+#include "reactor_type.h"
+#include "reactor_impl.h"
 
 class ReactorImpl;
 
@@ -238,4 +234,4 @@ class DgramHandler : public EventHandler {
 		virtual void mHandleWrite(SOCKET sockfd);
 		virtual void mHandleExcept(SOCKET sockfd);
 };
-#endif
+#endif // REACTOR_H_

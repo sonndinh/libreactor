@@ -11,7 +11,7 @@
  *
  * =====================================================================================
  */
-#include "SimpleTimer.h"
+#include "timer.h"
 
 TimerList* TimerList::mInstance = NULL;
 

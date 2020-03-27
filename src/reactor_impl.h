@@ -11,20 +11,16 @@
  *
  * =====================================================================================
  */
-#ifndef _ReactorImpl_h_
-#define _ReactorImpl_h_
-
-//#include <pantheios/pantheios.hpp>
-//#include <pantheios/frontends/stock.h>
-//#include <pantheios/inserters.hpp>
+#ifndef REACTOR_IMPL_H_
+#define REACTOR_IMPL_H_
 
 #include <stdio.h>
 #include <poll.h>
 #include <sys/epoll.h>
 
-#include "SocketWF.h"
-#include "ReactorType.h"
-#include "Reactor.h"
+#include "socket_wf.h"
+#include "reactor_type.h"
+#include "reactor.h"
 
 class EventHandler;
 
@@ -221,4 +217,4 @@ class KqueueReactorImpl : public ReactorImpl {
 };
 #endif
 
-#endif
+#endif // REACTOR_IMPL_H_

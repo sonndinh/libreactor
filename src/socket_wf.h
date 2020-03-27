@@ -23,19 +23,15 @@
  *
  * =====================================================================================
  */
-#ifndef _SocketWF_h_
-#define _SocketWF_h_
-
-//#include <pantheios/pantheios.hpp>
-//#include <pantheios/frontends/stock.h>
-//#include <pantheios/inserters.hpp>
+#ifndef SOCKET_WF_H_
+#define SOCKET_WF_H_
 
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <string.h>
 #include <unistd.h>
 #include <stdio.h>
-#include "ReactorType.h"
+#include "reactor_type.h"
 
 
 /*
@@ -218,4 +214,4 @@ class SOCK_Datagram {
 		}
 };
 
-#endif
+#endif // SOCKET_WF_H_

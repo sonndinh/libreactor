@@ -12,8 +12,8 @@
  *
  * =====================================================================================
  */
-#ifndef SIMPLE_TIMER_H
-#define SIMPLE_TIMER_H 
+#ifndef TIMER_H_
+#define TIMER_H_
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -75,4 +75,4 @@ class TimerList {
 		void mRun();
 };
 
-#endif
+#endif // TIMER_H_

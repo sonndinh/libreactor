@@ -11,8 +11,8 @@
  *
  * =====================================================================================
  */
-#ifndef _ReactorType_h_
-#define _ReactorType_h_
+#ifndef REACTOR_TYPE_H_
+#define REACTOR_TYPE_H_
 
 #include <sys/time.h>
 
@@ -80,4 +80,4 @@ typedef void (*ReactorDgramHandleEvent)(UDPState state);
 //User's callback functions for timer events
 typedef void (*ReactorHandleTimer)();
 
-#endif
+#endif // REACTOR_TYPE_H_
