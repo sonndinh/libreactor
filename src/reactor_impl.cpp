@@ -260,13 +260,13 @@ void PollReactorImpl::mHandleEvents(Time_Value* time){
 			continue;
 		
 		if((mClient[i].revents & POLLRDNORM)){
-//			pantheios::log_INFORMATIONAL("Read event at mClient[", pantheios::integer(i), "]");
+      //			pantheios::log_INFORMATIONAL("Read event at mClient[", pantheios::integer(i), "]");
 			mHandler[i]->mHandleEvent(mClient[i].fd, READ_EVENT);
 			if(--nready <= 0)
 				break;
 		}
 		if((mClient[i].revents & POLLWRNORM)){
-//			pantheios::log_INFORMATIONAL("Write event at mClient[", pantheios::integer(i), "]");
+      //			pantheios::log_INFORMATIONAL("Write event at mClient[", pantheios::integer(i), "]");
 			mHandler[i]->mHandleEvent(mClient[i].fd, WRITE_EVENT);
 			if(--nready <= 0)
 				break;
@@ -301,11 +301,11 @@ void PollReactorImpl::mRegisterHandler(EventHandler* eh, EventType et){
 		}
 
 	if(i == MAXFD){
-//		pantheios::log_INFORMATIONAL("Too many client !!!");
+    //		pantheios::log_INFORMATIONAL("Too many client !!!");
 		exit(EXIT_FAILURE);
 	}
 
-//	pantheios::log_INFORMATIONAL("mMaxi: ", pantheios::integer(mMaxi), ". i: ", pantheios::integer(i));
+  //	pantheios::log_INFORMATIONAL("mMaxi: ", pantheios::integer(mMaxi), ". i: ", pantheios::integer(i));
 	if(i > mMaxi)
 		mMaxi = i;	
 }
@@ -355,7 +355,7 @@ void PollReactorImpl::mRemoveHandler(SOCKET h, EventType et){
 DevPollReactorImpl::DevPollReactorImpl(){	
 	mDevpollfd = open("/dev/poll", O_RDWR);
 	if(mDevpollfd < 0) {
-//		pantheios::log_INFORMATIONAL("Cannot open /dev/poll !!!");
+    //		pantheios::log_INFORMATIONAL("Cannot open /dev/poll !!!");
 		exit(EXIT_FAILURE);
 	}
 
@@ -429,11 +429,11 @@ void DevPollReactorImpl::mRegisterHandler(EventHandler* eh, EventType et){
 			//handler of a particular descriptor is saved to index has the same value with the descriptor
 			mHandler[temp] = eh;
 			break;
-   		}
+    }
 	}
 
 	if(i == MAXFD) {
-//		pantheios::log_INFORMATIONAL("Too many client !");
+    //		pantheios::log_INFORMATIONAL("Too many client !");
 		exit(EXIT_FAILURE);
 	}
 
@@ -446,7 +446,7 @@ void DevPollReactorImpl::mRegisterHandler(EventHandler* eh, EventType et){
 	}
 
 	if(write(mDevpollfd, mBuf, (sizeof(struct pollfd) * MAXFD)) != 
-										(sizeof(struct pollfd) * MAXFD) ) {
+     (sizeof(struct pollfd) * MAXFD) ) {
 		perror("Failed to write all pollfds");
 		close(mDevpollfd);
 		if(mOutput != null) {
@@ -487,7 +487,7 @@ void DevPollReactorImpl::mRemoveHandler(SOCKET h, EventType et){
 	}
 
 	if(write(mDevpollfd, mBuf, (sizeof(struct pollfd) * MAXFD)) != 
-										(sizeof(struct pollfd) * MAXFD) ) {
+     (sizeof(struct pollfd) * MAXFD) ) {
 		perror("Failed to write all pollfds");
 		close(mDevpollfd);
 		if(mOutput != null) {
@@ -545,7 +545,7 @@ EpollReactorImpl::~EpollReactorImpl(){
 void EpollReactorImpl::mRegisterHandler(EventHandler* eh, EventType et){
 	SOCKET sockfd = eh->mGetHandle();
 	if(sockfd >= MAXFD){
-//		pantheios::log_INFORMATIONAL("Too large file descriptor !!!");
+    //		pantheios::log_INFORMATIONAL("Too large file descriptor !!!");
 		return;
 	}
 	
@@ -580,7 +580,7 @@ void EpollReactorImpl::mRegisterHandler(SOCKET h, EventHandler* eh, EventType et
 void EpollReactorImpl::mRemoveHandler(EventHandler* eh, EventType et){
 	SOCKET sockfd = eh->mGetHandle();
 	if(sockfd >= MAXFD){
-//		pantheios::log_INFORMATIONAL("Bad file descriptor !!!");
+    //		pantheios::log_INFORMATIONAL("Bad file descriptor !!!");
 		return;
 	}
 	

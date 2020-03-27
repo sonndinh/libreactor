@@ -23,7 +23,7 @@
  */
 ConnectionAcceptor::ConnectionAcceptor(const INET_Addr &addr, Reactor* reactor){
 	mReactor = reactor;
-	mSockAcceptor = new SOCK_Acceptor(addr);
+  mSockAcceptor = new SOCK_Acceptor(addr);
 	//Because connection request from client is also READ_EVENT,
 	//so we register the event for this object to Reactor
 	reactor->mRegisterHandler(this, READ_EVENT);
@@ -54,7 +54,7 @@ ConnectionAcceptor::~ConnectionAcceptor(){
  *--------------------------------------------------------------------------------------
  */
 void ConnectionAcceptor::mHandleEvent(SOCKET h, EventType et){
-//	pantheios::log_INFORMATIONAL("Connection request from client !");
+  //	pantheios::log_INFORMATIONAL("Connection request from client !");
 	if((et & READ_EVENT) == READ_EVENT){
 		//Init new SOCK_Stream with invalid handle.
 		//It is FREED in StreamHandler's destructor
@@ -124,7 +124,7 @@ StreamHandler::~StreamHandler(){
  *--------------------------------------------------------------------------------------
  */
 void StreamHandler::mHandleEvent(SOCKET h, EventType et){
-//	pantheios::log_INFORMATIONAL("Receiving data from client !");
+  //	pantheios::log_INFORMATIONAL("Receiving data from client !");
 	if((et & READ_EVENT) == READ_EVENT){
 		//save received data to internal buffer
 		//then, process it
@@ -193,11 +193,11 @@ void StreamHandler::mHandleRead(SOCKET handle){
 		mSipMsg.mIsReadingBody = false;
 		mSipMsg.mRemainBodyLen = 0;
 
-	//////////////////////////////////////////////////////////////
-	//// We are still reading headers. If we found empty line,
-	//// save these header bytes and move to read body. Else,
-	//// save all read header bytes to big buff and continue read
-	//////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////
+    //// We are still reading headers. If we found empty line,
+    //// save these header bytes and move to read body. Else,
+    //// save all read header bytes to big buff and continue read
+    //////////////////////////////////////////////////////////////
 	}else if(mSipMsg.mIsReadingBody == false){
 		n = read(handle, buff, sizeof(buff));
 		if((n<0 && errno==ECONNRESET) || (n==0)){
@@ -205,7 +205,7 @@ void StreamHandler::mHandleRead(SOCKET handle){
 			return;
 		}
 		if((emptyline = strstr(buff, "\r\n\r\n")) != NULL){
-//			pantheios::log_INFORMATIONAL("Found empty line");
+      //			pantheios::log_INFORMATIONAL("Found empty line");
 			mSipMsg.mIsReadingBody = true;
 			int m = (emptyline+4-&buff[0]);
 			strncat(mSipMsg.mBigBuff, buff, m);
@@ -219,7 +219,7 @@ void StreamHandler::mHandleRead(SOCKET handle){
 				
 			if((contlen_begin = strstr(inter, "content-length")) == NULL){
 				if((contlen_begin = strstr(inter, "\r\nl")) == NULL){
-//					pantheios::log_INFORMATIONAL("Not found Content-Length header");
+          //					pantheios::log_INFORMATIONAL("Not found Content-Length header");
 					mHandleClose(handle);
 					return;
 				}
@@ -350,7 +350,7 @@ void DgramHandler::mHandleRead(SOCKET sockfd){
 	socklen_t clilen = sizeof(cliaddr);
 
 	if((n=mSockDgram->mRecvfrom(buff, sizeof(buff), 0, (struct sockaddr*)&cliaddr, &clilen)) < 0){
-//		pantheios::log_INFORMATIONAL("Get UDP message fail !!!");
+    //		pantheios::log_INFORMATIONAL("Get UDP message fail !!!");
 		return;
 	}
 
@@ -431,32 +431,32 @@ void Reactor::mHandleEvents(Time_Value* timeout){
 Reactor* Reactor::sInstance(DemuxType demux){
 	if(sReactor == NULL){
 		switch (demux){
-			case SELECT_DEMUX:
-				sReactorImpl = new SelectReactorImpl();
-				break;
-			case POLL_DEMUX:
-				sReactorImpl = new PollReactorImpl();
-				break;
+    case SELECT_DEMUX:
+      sReactorImpl = new SelectReactorImpl();
+      break;
+    case POLL_DEMUX:
+      sReactorImpl = new PollReactorImpl();
+      break;
 
 #ifdef HAS_DEV_POLL
-			case DEVPOLL_DEMUX:
-				sReactorImpl = new DevPollReactorImpl();
-				break;
+    case DEVPOLL_DEMUX:
+      sReactorImpl = new DevPollReactorImpl();
+      break;
 #endif
 
 #ifdef HAS_EPOLL
-			case EPOLL_DEMUX:
-				sReactorImpl = new EpollReactorImpl();
-				break;
+    case EPOLL_DEMUX:
+      sReactorImpl = new EpollReactorImpl();
+      break;
 #endif
         
 #ifdef HAS_KQUEUE
-			case KQUEUE_DEMUX:
-				sReactorImpl = new KqueueReactorImpl();
-				break;
+    case KQUEUE_DEMUX:
+      sReactorImpl = new KqueueReactorImpl();
+      break;
 #endif
 
-			default: break;
+    default: break;
 		}
 
 		//use "lazy" initialization to sReactor

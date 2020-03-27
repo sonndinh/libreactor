@@ -37,13 +37,12 @@ class ReactorImpl;
  * =====================================================================================
  */
 class EventHandler {
-	public:
-		//NOTE: may be we don't need "handle" parameter in mHandleEvent()
-		//because when mHandleEvent() called, it can get associated socket
-		//descriptor through SOCK_Acceptor or SOCK_Stream or SOCK_Datagram
-		virtual void mHandleEvent(SOCKET handle, EventType et)=0;
-		virtual SOCKET mGetHandle() const=0;
-
+public:
+  //NOTE: may be we don't need "handle" parameter in mHandleEvent()
+  //because when mHandleEvent() called, it can get associated socket
+  //descriptor through SOCK_Acceptor or SOCK_Stream or SOCK_Datagram
+  virtual void mHandleEvent(SOCKET handle, EventType et)=0;
+  virtual SOCKET mGetHandle() const=0;
 };
 
 
@@ -54,92 +53,92 @@ class EventHandler {
  * =====================================================================================
  */
 class Reactor {
-	public:
-		ReactorStreamHandleRead		mTCPReadHandler;
-		ReactorStreamHandleEvent	mTCPEventHandler;
-		ReactorDgramHandleRead		mUDPReadHandler;
-		ReactorDgramHandleEvent		mUDPEventHandler;
+public:
+  ReactorStreamHandleRead		mTCPReadHandler;
+  ReactorStreamHandleEvent	mTCPEventHandler;
+  ReactorDgramHandleRead		mUDPReadHandler;
+  ReactorDgramHandleEvent		mUDPEventHandler;
 		
-	protected:
-		//Pointer to abstract implementation of Reactor
-		//using to Bridge pattern
-		static ReactorImpl* sReactorImpl;
+protected:
+  //Pointer to abstract implementation of Reactor
+  //using to Bridge pattern
+  static ReactorImpl* sReactorImpl;
 
-		//Pointer to a process-wide Reactor singleton
-		static Reactor* sReactor;
+  //Pointer to a process-wide Reactor singleton
+  static Reactor* sReactor;
 
-	public:
+public:
 		
-		/* 
-		 * ===  FUNCTION  ======================================================================
-		 *         Name:  mRegisterTCPCbFuncs()
-		 *  Description:  Function to register user callbacks for incoming TCP data 
-		 *  			  and TCP events.
-		 * =====================================================================================
-		 */
-		virtual void mRegisterTCPCbFuncs(ReactorStreamHandleRead readCb, ReactorStreamHandleEvent eventCb){
-			mTCPReadHandler = readCb;
-			mTCPEventHandler = eventCb;
-		}
+  /* 
+   * ===  FUNCTION  ======================================================================
+   *         Name:  mRegisterTCPCbFuncs()
+   *  Description:  Function to register user callbacks for incoming TCP data 
+   *  			  and TCP events.
+   * =====================================================================================
+   */
+  virtual void mRegisterTCPCbFuncs(ReactorStreamHandleRead readCb, ReactorStreamHandleEvent eventCb){
+    mTCPReadHandler = readCb;
+    mTCPEventHandler = eventCb;
+  }
 
-		/* 
-		 * ===  FUNCTION  ======================================================================
-		 *         Name:  mRegisterUDPCbFuncs()
-		 *  Description:  Function to register user callbacks for incoming UDP datagrams
-		 *  			  and UDP events.
-		 * =====================================================================================
-		 */
-		virtual void mRegisterUDPCbFuncs(ReactorDgramHandleRead readCb, ReactorDgramHandleEvent eventCb){
-			mUDPReadHandler = readCb;
-			mUDPEventHandler = eventCb;
-		}
+  /* 
+   * ===  FUNCTION  ======================================================================
+   *         Name:  mRegisterUDPCbFuncs()
+   *  Description:  Function to register user callbacks for incoming UDP datagrams
+   *  			  and UDP events.
+   * =====================================================================================
+   */
+  virtual void mRegisterUDPCbFuncs(ReactorDgramHandleRead readCb, ReactorDgramHandleEvent eventCb){
+    mUDPReadHandler = readCb;
+    mUDPEventHandler = eventCb;
+  }
 
-		/* 
-		 * ===  FUNCTION  ======================================================================
-		 *         Name:  mRegisterHandler()
-		 *  Description:  Interface for registering handler
-		 * =====================================================================================
-		 */
-		virtual void mRegisterHandler(EventHandler* eh, EventType et);
-		virtual void mRegisterHandler(SOCKET h, EventHandler* eh, EventType et);
+  /* 
+   * ===  FUNCTION  ======================================================================
+   *         Name:  mRegisterHandler()
+   *  Description:  Interface for registering handler
+   * =====================================================================================
+   */
+  virtual void mRegisterHandler(EventHandler* eh, EventType et);
+  virtual void mRegisterHandler(SOCKET h, EventHandler* eh, EventType et);
 
-		/* 
-		 * ===  FUNCTION  ======================================================================
-		 *         Name:  mRemoveHandler()
-		 *  Description:  Interface for removing handler
-		 * =====================================================================================
-		 */
-		virtual void mRemoveHandler(EventHandler* eh, EventType et);
-		virtual void mRemoveHandler(SOCKET h, EventType et);
+  /* 
+   * ===  FUNCTION  ======================================================================
+   *         Name:  mRemoveHandler()
+   *  Description:  Interface for removing handler
+   * =====================================================================================
+   */
+  virtual void mRemoveHandler(EventHandler* eh, EventType et);
+  virtual void mRemoveHandler(SOCKET h, EventType et);
 
-		ReactorImpl* mGetReactorImpl();
+  ReactorImpl* mGetReactorImpl();
 		
-		/* 
-		 * ===  FUNCTION  ======================================================================
-		 *         Name:  mHandleEvents()
-		 *  Description:  Main loop for handling incoming events
-		 * =====================================================================================
-		 */
-		void mHandleEvents(Time_Value* timeout=NULL);
+  /* 
+   * ===  FUNCTION  ======================================================================
+   *         Name:  mHandleEvents()
+   *  Description:  Main loop for handling incoming events
+   * =====================================================================================
+   */
+  void mHandleEvents(Time_Value* timeout=NULL);
 
-		/* 
-		 * ===  FUNCTION  ======================================================================
-		 *         Name:  sInstance()
-		 *  Description:  Access point for user to get solely instance of this class
-		 * =====================================================================================
-		 */
-		static Reactor* sInstance(DemuxType type=SELECT_DEMUX);
+  /* 
+   * ===  FUNCTION  ======================================================================
+   *         Name:  sInstance()
+   *  Description:  Access point for user to get solely instance of this class
+   * =====================================================================================
+   */
+  static Reactor* sInstance(DemuxType type=SELECT_DEMUX);
 
-	protected:
-		/* 
-		 * ===  FUNCTION  ======================================================================
-		 *         Name:  Reactor()
-		 *  Description:  Construtor is protected so it assures that there is only 
-		 *  			  a instance of Reactor ever created.
-		 * =====================================================================================
-		 */
-		Reactor();
-		~Reactor();
+protected:
+  /* 
+   * ===  FUNCTION  ======================================================================
+   *         Name:  Reactor()
+   *  Description:  Construtor is protected so it assures that there is only 
+   *  			  a instance of Reactor ever created.
+   * =====================================================================================
+   */
+  Reactor();
+  ~Reactor();
 };
 
 
@@ -152,19 +151,19 @@ class Reactor {
  * =====================================================================================
  */
 class ConnectionAcceptor : public EventHandler {
-	private:
-		//Socket factory that accepts client connections
-		SOCK_Acceptor* mSockAcceptor;
+private:
+  //Socket factory that accepts client connections
+  SOCK_Acceptor* mSockAcceptor;
 
-		//Cached Reactor
-		Reactor* mReactor;
+  //Cached Reactor
+  Reactor* mReactor;
 
-	public:
-		ConnectionAcceptor(const INET_Addr &addr, Reactor* reactor);
-		~ConnectionAcceptor();
+public:
+  ConnectionAcceptor(const INET_Addr &addr, Reactor* reactor);
+  ~ConnectionAcceptor();
 
-		virtual void mHandleEvent(SOCKET handle, EventType et);
-		virtual SOCKET mGetHandle() const;
+  virtual void mHandleEvent(SOCKET handle, EventType et);
+  virtual SOCKET mGetHandle() const;
 };
 
 //SOCK_Acceptor handles factory enables a ConnectionAcceptor object
@@ -191,24 +190,24 @@ struct SipMsgBuff{
 };
 
 class StreamHandler : public EventHandler {
-	private:
-		//Receives data from a connected client
-		SOCK_Stream*		mSockStream;
-		//Store process-wide Reactor instance
-		Reactor*			mReactor;
-		struct SipMsgBuff	mSipMsg;
+private:
+  //Receives data from a connected client
+  SOCK_Stream*		mSockStream;
+  //Store process-wide Reactor instance
+  Reactor*			mReactor;
+  struct SipMsgBuff	mSipMsg;
 
-	public:
-		StreamHandler(SOCK_Stream* stream, Reactor* reactor);
-		~StreamHandler();
-		virtual void mHandleEvent(SOCKET handle, EventType et);
-		virtual SOCKET mGetHandle() const;
+public:
+  StreamHandler(SOCK_Stream* stream, Reactor* reactor);
+  ~StreamHandler();
+  virtual void mHandleEvent(SOCKET handle, EventType et);
+  virtual SOCKET mGetHandle() const;
 
-	protected:
-		virtual void mHandleRead(SOCKET handle);
-		virtual void mHandleWrite(SOCKET handle);
-		virtual void mHandleClose(SOCKET handle);
-		virtual void mHandleExcept(SOCKET handle);
+protected:
+  virtual void mHandleRead(SOCKET handle);
+  virtual void mHandleWrite(SOCKET handle);
+  virtual void mHandleClose(SOCKET handle);
+  virtual void mHandleExcept(SOCKET handle);
 };
 
 
@@ -219,19 +218,19 @@ class StreamHandler : public EventHandler {
  * =====================================================================================
  */
 class DgramHandler : public EventHandler {
-	private:
-		SOCK_Datagram*		mSockDgram;
-		Reactor*			mReactor;
+private:
+  SOCK_Datagram*		mSockDgram;
+  Reactor*			mReactor;
 
-	public:	
-		DgramHandler(const INET_Addr& addr, Reactor* reactor);
-		~DgramHandler();
-		virtual void mHandleEvent(SOCKET sockfd, EventType et);
-		virtual SOCKET mGetHandle() const;
+public:	
+  DgramHandler(const INET_Addr& addr, Reactor* reactor);
+  ~DgramHandler();
+  virtual void mHandleEvent(SOCKET sockfd, EventType et);
+  virtual SOCKET mGetHandle() const;
 
-	protected:
-		virtual void mHandleRead(SOCKET sockfd);
-		virtual void mHandleWrite(SOCKET sockfd);
-		virtual void mHandleExcept(SOCKET sockfd);
+protected:
+  virtual void mHandleRead(SOCKET sockfd);
+  virtual void mHandleWrite(SOCKET sockfd);
+  virtual void mHandleExcept(SOCKET sockfd);
 };
 #endif // REACTOR_H_

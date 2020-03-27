@@ -32,40 +32,40 @@ const int INVALID_HANDLE_VALUE = -1;
 typedef struct timeval Time_Value;
 
 enum {	
-	ACCEPT_EVENT = 0x0001,
-	READ_EVENT = 0x0002,
-	WRITE_EVENT = 0x0004,
-	EXCEPT_EVENT = 0x0008,
-	TIMEOUT_EVENT = 0x0010,
-	SIGNAL_EVENT = 0x0020,
-	CLOSE_EVENT = 0x0040
+      ACCEPT_EVENT = 0x0001,
+      READ_EVENT = 0x0002,
+      WRITE_EVENT = 0x0004,
+      EXCEPT_EVENT = 0x0008,
+      TIMEOUT_EVENT = 0x0010,
+      SIGNAL_EVENT = 0x0020,
+      CLOSE_EVENT = 0x0040
 };
 
 //choose demultiplexing mechanism
 typedef enum {
-	SELECT_DEMUX,	//traditional select() function
-	POLL_DEMUX,		//traditional poll() function
-	DEVPOLL_DEMUX,	//Solaris /dev/poll facility
-	EPOLL_DEMUX,	//Linux epoll() function set
-	KQUEUE_DEMUX	//FreeBSD, NetBSD kqueue facility
+              SELECT_DEMUX,	//traditional select() function
+              POLL_DEMUX,		//traditional poll() function
+              DEVPOLL_DEMUX,	//Solaris /dev/poll facility
+              EPOLL_DEMUX,	//Linux epoll() function set
+              KQUEUE_DEMUX	//FreeBSD, NetBSD kqueue facility
 } DemuxType;
 
 typedef enum {
-	TCPStateINIT,
-	TCPStateCONNECTED,
-	TCPStateLISTEN,
-	TCPStateCLOSE,
-	TCPStateABORT,
-	TCPStateCANCEL,
-	TCPStateOVERFLOW,
-	TCPStateFDMAX,
-	TCPStateRSVD,
-	TCPStateBADDATA
+              TCPStateINIT,
+              TCPStateCONNECTED,
+              TCPStateLISTEN,
+              TCPStateCLOSE,
+              TCPStateABORT,
+              TCPStateCANCEL,
+              TCPStateOVERFLOW,
+              TCPStateFDMAX,
+              TCPStateRSVD,
+              TCPStateBADDATA
 } TCPState;
 
 typedef enum {
-	UDPStateINIT,
-	UDPStateLISTEN
+              UDPStateINIT,
+              UDPStateLISTEN
 } UDPState;
 
 
