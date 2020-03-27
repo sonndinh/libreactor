@@ -351,6 +351,7 @@ void PollReactorImpl::mRemoveHandler(SOCKET h, EventType et){
  * =====================================================================================
  */
 #ifdef HAS_DEV_POLL
+
 DevPollReactorImpl::DevPollReactorImpl(){	
 	mDevpollfd = open("/dev/poll", O_RDWR);
 	if(mDevpollfd < 0) {
@@ -496,7 +497,7 @@ void DevPollReactorImpl::mRemoveHandler(SOCKET h, EventType et){
 		exit(EXIT_FAILURE);
 	}
 }
-#endif
+#endif // HAS_DEV_POLL
 
 
 /*
@@ -513,6 +514,8 @@ void DevPollReactorImpl::mRemoveHandler(SOCKET h, EventType et){
  * Description:  Constructor which create a new epoll instance
  *--------------------------------------------------------------------------------------
  */
+#ifdef HAS_EPOLL
+
 EpollReactorImpl::EpollReactorImpl(){
 	for(int i=0; i<MAXFD; i++){
 		mHandler[i] = NULL;
@@ -646,6 +649,7 @@ void EpollReactorImpl::mHandleEvents(Time_Value* time){
 	}
 }
 
+#endif // HAS_EPOLL
 
 /*
  * =====================================================================================
@@ -675,7 +679,7 @@ void EpollReactorImpl::mHandleEvents(Time_Value* time){
  *
  * =====================================================================================
  */
-#ifdef HAS_EVENT_H
+#ifdef HAS_KQUEUE
 
 /*
  *--------------------------------------------------------------------------------------
@@ -802,4 +806,4 @@ void KqueueReactorImpl::mHandleEvents(Time_Value* time){
 	}
 }
 
-#endif
+#endif // HAS_KQUEUE

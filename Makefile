@@ -1,29 +1,31 @@
 GXX = g++
 DEBUG_FLAG = -ggdb
 STATIC_LIB = libreactor.a
-DYNAMIC_LIB = libreactor.so
+DYNAMIC_LIB = libreactor.dylib
 
 TEST_PROG = test
 LIBS = -lreactor -losipparser2 -losip2 -lpthread
-LIBS_PATH = -Llibs -L/usr/local/lib
+LIBS_PATH = -L./lib -L/usr/local/lib
 INCLUDE_PATH = -I/usr/local/include/osipparser2 -I/usr/local/include/osip2
 
+lib: mk_dir $(STATIC_LIB) #$(DYNAMIC_LIB)
+
 mk_dir:
-	mkdir -p libs/
+	mkdir -p lib/
 
 $(STATIC_LIB): reactor.o reactor_impl.o
-	ar rcs libs/$(STATIC_LIB) libs/*.o
+	ar rcs lib/$(STATIC_LIB) lib/*.o
 
 $(DYNAMIC_LIB): reactor.o reactor_impl.o
-	ld -G libs/*.o -o libs/$(DYNAMIC_LIB)
+	ld -dylib lib/*.o -o lib/$(DYNAMIC_LIB)
 
 reactor.o : src/reactor.cpp
 	$(GXX) $(DEBUG_FLAG) -c src/reactor.cpp
-	mv reactor.o libs/
+	mv reactor.o lib/
 
 reactor_impl.o : src/reactor_impl.cpp
 	$(GXX) $(DEBUG_FLAG) -c src/reactor_impl.cpp
-	mv reactor_impl.o libs/
+	mv reactor_impl.o lib/
 
 $(TEST_PROG) : test.o
 	$(GXX) $(DEBUG_FLAG) -o $(TEST_PROG) test.o $(LIBS_PATH) $(LIBS)
@@ -31,9 +33,7 @@ $(TEST_PROG) : test.o
 test.o : test/test.cpp
 	$(GXX) $(DEBUG_FLAG) -c test/test.cpp 
 
-lib: mk_dir $(STATIC_LIB) $(DYNAMIC_LIB)
-
 all: mk_dir $(STATIC_LIB) $(DYNAMIC_LIB) test
 
 clean:
-	rm libs/*.o libs/$(STATIC_LIB) libs/$(DYNAMIC_LIB) $(TEST_PROG) *.o
+	rm lib/*.o lib/$(STATIC_LIB) lib/$(DYNAMIC_LIB) $(TEST_PROG) *.o

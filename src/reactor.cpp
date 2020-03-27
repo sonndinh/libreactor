@@ -236,7 +236,7 @@ void StreamHandler::mHandleRead(SOCKET handle){
 				}
 				if(isValid == false) {
 					//handle invalid Content-Length value case
-					pantheios::log_INFORMATIONAL("Invalid Content Length !!!");
+					//pantheios::log_INFORMATIONAL("Invalid Content Length !!!");
 					mHandleClose(handle);
 					return;
 				}
@@ -438,17 +438,19 @@ Reactor* Reactor::sInstance(DemuxType demux){
 				sReactorImpl = new PollReactorImpl();
 				break;
 
-#ifdef HAVE_DEV_POLL
+#ifdef HAS_DEV_POLL
 			case DEVPOLL_DEMUX:
 				sReactorImpl = new DevPollReactorImpl();
 				break;
 #endif
 
+#ifdef HAS_EPOLL
 			case EPOLL_DEMUX:
 				sReactorImpl = new EpollReactorImpl();
 				break;
-
-#ifdef HAVE_EVENT_H
+#endif
+        
+#ifdef HAS_KQUEUE
 			case KQUEUE_DEMUX:
 				sReactorImpl = new KqueueReactorImpl();
 				break;

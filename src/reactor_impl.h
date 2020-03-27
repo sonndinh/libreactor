@@ -16,7 +16,6 @@
 
 #include <stdio.h>
 #include <poll.h>
-#include <sys/epoll.h>
 
 #include "socket_wf.h"
 #include "reactor_type.h"
@@ -164,7 +163,7 @@ class DevPollReactorImpl : public ReactorImpl {
 		void mRemoveHandler(SOCKET h, EventType et);
 		void mHandleEvents(Time_Value* timeout=NULL);
 };
-#endif
+#endif // HAS_DEV_POLL
 
 /*
  * =====================================================================================
@@ -172,6 +171,9 @@ class DevPollReactorImpl : public ReactorImpl {
  *  Description:  It uses Linux's epoll() as demultiplexer
  * =====================================================================================
  */
+#ifdef HAS_EPOLL
+#include <sys/epoll.h>
+
 class EpollReactorImpl : public ReactorImpl {
 	private:
 		int		mEpollFd;
@@ -189,6 +191,8 @@ class EpollReactorImpl : public ReactorImpl {
 		void mHandleEvents(Time_Value* timeout=NULL);
 };
 
+#endif // HAS_EPOLL
+
 /*
  * =====================================================================================
  *        Class:  KqueueReactorImpl
@@ -196,7 +200,7 @@ class EpollReactorImpl : public ReactorImpl {
  *  			  used for BSD-derived systems such as FreeBSD, NetBSD
  * =====================================================================================
  */
-#ifdef HAS_EVENT_H
+#ifdef HAS_KQUEUE
 #include <sys/event.h>
 #include <sys/types.h>
 
@@ -215,6 +219,6 @@ class KqueueReactorImpl : public ReactorImpl {
 		void mRemoveHandler(SOCKET h, EventType et);
 		void mHandleEvents(Time_Value* timeout=NULL);
 };
-#endif
+#endif // HAS_KQUEUE
 
 #endif // REACTOR_IMPL_H_
