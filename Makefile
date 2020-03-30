@@ -36,4 +36,4 @@ test.o : test/test.cpp
 all: mk_dir $(STATIC_LIB) $(DYNAMIC_LIB) test
 
 clean:
-	rm lib/*.o lib/$(STATIC_LIB) lib/$(DYNAMIC_LIB) $(TEST_PROG) *.o
+	rm lib/*.o lib/$(STATIC_LIB) lib/$(DYNAMIC_LIB) test/$(TEST_PROG) test/*.o

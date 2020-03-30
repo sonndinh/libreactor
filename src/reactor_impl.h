@@ -1,13 +1,13 @@
 /*
  * =====================================================================================
- *  FILENAME	:  ReactorImpl.h
- *  DESCRIPTION	:  
- *  VERSION		:  1.0
- *  CREATED		:  12/03/2010 02:24:11 PM
- *  REVISION	:  none
- *  COMPILER	:  g++
- *  AUTHOR		:  Ngoc Son
- *  COPYRIGHT	:  Copyright (c) 2010, Ngoc Son
+ *  FILENAME  :  ReactorImpl.h
+ *  DESCRIPTION :  
+ *  VERSION   :  1.0
+ *  CREATED   :  12/03/2010 02:24:11 PM
+ *  REVISION  :  none
+ *  COMPILER  :  g++
+ *  AUTHOR    :  Ngoc Son
+ *  COPYRIGHT :  Copyright (c) 2010, Ngoc Son
  *
  * =====================================================================================
  */
@@ -24,12 +24,12 @@
 class EventHandler;
 
 struct Tuple {
-	//pointer to Event_Handler that processes the events arriving
-	//on the handle
-	EventHandler* mEventHandler;
-	//bitmask that tracks which types of events <Event_Handler>
-	//is registered for
-	EventType mEventType;
+  //pointer to Event_Handler that processes the events arriving
+  //on the handle
+  EventHandler* mEventHandler;
+  //bitmask that tracks which types of events <Event_Handler>
+  //is registered for
+  EventType mEventType;
 };
 
 
@@ -37,9 +37,9 @@ struct Tuple {
  * =====================================================================================
  *        Class:  DemuxTable
  *  Description:  Demultiplexing table contains mapping tuples
- *  			  <SOCKET, EventHandler, EventType>. This table maintained by
- *  			  implementing Reactor class so it can dispatch current event with a
- *  			  particular type to appropriate handler.
+ *          <SOCKET, EventHandler, EventType>. This table maintained by
+ *          implementing Reactor class so it can dispatch current event with a
+ *          particular type to appropriate handler.
  * =====================================================================================
  */
 class DemuxTable {
@@ -47,7 +47,7 @@ public:
   DemuxTable();
   ~DemuxTable();
   void mConvertToFdSets(fd_set &readset, fd_set &writeset, fd_set &exceptset, SOCKET &max_handle);
-		
+    
 public:
   //because the number of file descriptors can be demultiplexed by
   //select() is limited by FD_SETSIZE constant so this table is indexed
@@ -60,13 +60,13 @@ public:
  * =====================================================================================
  *        Class:  ReactorImpl
  *  Description:  Interface for implementation of Reactor. It is abstract base class.
- *  			  User MUST register ReactorStreamHandleRead if they use TCP
- *  			  User MUST register ReactorDgramHandleRead if they use UDP
- *  			  ReactorStreamHandleEvent & ReactorDgramHandleEvent can be registered
- *				  as user's demand.
- *		   Note:  That this pure abstract class just define interfaces for transfering 
- *		   		  read data to callbacks. Transfer event methods to user's callbacks can 
- *		   		  be implemented by derived classes such as SelectReactorImpl,...
+ *          User MUST register ReactorStreamHandleRead if they use TCP
+ *          User MUST register ReactorDgramHandleRead if they use UDP
+ *          ReactorStreamHandleEvent & ReactorDgramHandleEvent can be registered
+ *          as user's demand.
+ *       Note:  That this pure abstract class just define interfaces for transfering 
+ *            read data to callbacks. Transfer event methods to user's callbacks can 
+ *            be implemented by derived classes such as SelectReactorImpl,...
  * =====================================================================================
  */
 class ReactorImpl {
@@ -95,9 +95,9 @@ public:
 class SelectReactorImpl : public ReactorImpl {
 private:
   DemuxTable mTable;
-  fd_set	mRdSet, mWrSet, mExSet;
-  int		mMaxHandle;
-	
+  fd_set  mRdSet, mWrSet, mExSet;
+  int   mMaxHandle;
+  
 public:
   SelectReactorImpl();
   ~SelectReactorImpl();
@@ -118,9 +118,9 @@ public:
  */
 class PollReactorImpl : public ReactorImpl {
 private:
-  struct pollfd	mClient[MAXFD];
-  EventHandler*	mHandler[MAXFD];
-  int	mMaxi;
+  struct pollfd mClient[MAXFD];
+  EventHandler* mHandler[MAXFD];
+  int mMaxi;
 
 public:
   PollReactorImpl();
@@ -137,10 +137,10 @@ public:
  * =====================================================================================
  *        Class:  DevPollReactorImpl
  *  Description:  It uses /dev/poll as demultiplexer. This class is used with Solaris OS.
- *  NOTE	   :  - handler of file descriptor x is mHandler[x]
- *  			  - mBuf[] is array contains list of pollfd struct are currently observed
- *  			  - mOutput is output of ioctl() function, contains list of pollfds
- *  			  on which events occur.
+ *  NOTE     :  - handler of file descriptor x is mHandler[x]
+ *          - mBuf[] is array contains list of pollfd struct are currently observed
+ *          - mOutput is output of ioctl() function, contains list of pollfds
+ *          on which events occur.
  * =====================================================================================
  */
 #ifdef HAS_DEV_POLL
@@ -150,9 +150,9 @@ class DevPollReactorImpl : public ReactorImpl {
 private:
   int mDevpollfd;
   struct pollfd mBuf[MAXFD]; //input interested file descriptors
-  struct pollfd* mOutput;	   //file descriptors has event
+  struct pollfd* mOutput;    //file descriptors has event
   EventHandler* mHandler[MAXFD]; //keep track of handler for each file descriptor
-		
+    
 public:
   DevPollReactorImpl();
   ~DevPollReactorImpl();
@@ -176,10 +176,10 @@ public:
 
 class EpollReactorImpl : public ReactorImpl {
 private:
-  int		mEpollFd;
-  struct epoll_event	mEvents[MAXFD];//Output from epoll_wait()
-  EventHandler*		mHandler[MAXFD];
-		
+  int   mEpollFd;
+  struct epoll_event  mEvents[MAXFD];//Output from epoll_wait()
+  EventHandler*   mHandler[MAXFD];
+    
 public:
   EpollReactorImpl();
   ~EpollReactorImpl();
@@ -197,7 +197,7 @@ public:
  * =====================================================================================
  *        Class:  KqueueReactorImpl
  *  Description:  It uses BSD-derived kqueue() as demultiplexer. This class
- *  			  used for BSD-derived systems such as FreeBSD, NetBSD
+ *          used for BSD-derived systems such as FreeBSD, NetBSD
  * =====================================================================================
  */
 #ifdef HAS_KQUEUE
@@ -206,13 +206,13 @@ public:
 
 class KqueueReactorImpl : public ReactorImpl {
 private:
-  int	mKqueue;	//Kqueue identifier
-  int mEventsNo;	//The number of descriptors we are expecting events occur on.
+  int mKqueue;  //Kqueue identifier
+  int mEventsNo;  //The number of descriptors we are expecting events occur on.
 
 public:
   KqueueReactorImpl();
   ~KqueueReactorImpl();
-		
+    
   void mRegisterHandler(EventHandler* eh, EventType et);
   void mRegisterHandler(SOCKET h, EventHandler* eh, EventType et);
   void mRemoveHandler(EventHandler* eh, EventType et);

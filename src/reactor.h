@@ -1,14 +1,14 @@
 /*
  * =====================================================================================
- *  FILENAME	:  Reactor.h
- *  DESCRIPTION	:  Reactor class uses Singleton and Bridge pattern to
- *  			   define abstract interface.
- *  VERSION		:  1.0
- *  CREATED		:  12/03/2010 02:23:12 PM
- *  REVISION	:  none
- *  COMPILER	:  g++
- *  AUTHOR		:  Ngoc Son
- *  COPYRIGHT	:  Copyright (c) 2010, Ngoc Son
+ *  FILENAME  :  Reactor.h
+ *  DESCRIPTION :  Reactor class uses Singleton and Bridge pattern to
+ *           define abstract interface.
+ *  VERSION   :  1.0
+ *  CREATED   :  12/03/2010 02:23:12 PM
+ *  REVISION  :  none
+ *  COMPILER  :  g++
+ *  AUTHOR    :  Ngoc Son
+ *  COPYRIGHT :  Copyright (c) 2010, Ngoc Son
  *
  * =====================================================================================
  */
@@ -32,8 +32,8 @@ class ReactorImpl;
  * =====================================================================================
  *        Class:  EventHandler
  *  Description:  Following class is single handler methods of Event_Handler.
- *  			  Method in this class are called when events come. It is abstract
- *  			  base class for handling events so we cannot instantiate it
+ *          Method in this class are called when events come. It is abstract
+ *          base class for handling events so we cannot instantiate it
  * =====================================================================================
  */
 class EventHandler {
@@ -54,11 +54,11 @@ public:
  */
 class Reactor {
 public:
-  ReactorStreamHandleRead		mTCPReadHandler;
-  ReactorStreamHandleEvent	mTCPEventHandler;
-  ReactorDgramHandleRead		mUDPReadHandler;
-  ReactorDgramHandleEvent		mUDPEventHandler;
-		
+  ReactorStreamHandleRead   mTCPReadHandler;
+  ReactorStreamHandleEvent  mTCPEventHandler;
+  ReactorDgramHandleRead    mUDPReadHandler;
+  ReactorDgramHandleEvent   mUDPEventHandler;
+    
 protected:
   //Pointer to abstract implementation of Reactor
   //using to Bridge pattern
@@ -68,12 +68,12 @@ protected:
   static Reactor* sReactor;
 
 public:
-		
+    
   /* 
    * ===  FUNCTION  ======================================================================
    *         Name:  mRegisterTCPCbFuncs()
    *  Description:  Function to register user callbacks for incoming TCP data 
-   *  			  and TCP events.
+   *          and TCP events.
    * =====================================================================================
    */
   virtual void mRegisterTCPCbFuncs(ReactorStreamHandleRead readCb, ReactorStreamHandleEvent eventCb){
@@ -85,7 +85,7 @@ public:
    * ===  FUNCTION  ======================================================================
    *         Name:  mRegisterUDPCbFuncs()
    *  Description:  Function to register user callbacks for incoming UDP datagrams
-   *  			  and UDP events.
+   *          and UDP events.
    * =====================================================================================
    */
   virtual void mRegisterUDPCbFuncs(ReactorDgramHandleRead readCb, ReactorDgramHandleEvent eventCb){
@@ -112,7 +112,7 @@ public:
   virtual void mRemoveHandler(SOCKET h, EventType et);
 
   ReactorImpl* mGetReactorImpl();
-		
+    
   /* 
    * ===  FUNCTION  ======================================================================
    *         Name:  mHandleEvents()
@@ -134,7 +134,7 @@ protected:
    * ===  FUNCTION  ======================================================================
    *         Name:  Reactor()
    *  Description:  Construtor is protected so it assures that there is only 
-   *  			  a instance of Reactor ever created.
+   *          a instance of Reactor ever created.
    * =====================================================================================
    */
   Reactor();
@@ -146,8 +146,8 @@ protected:
  * =====================================================================================
  *        Class:  ConnectionAcceptor
  *  Description:  Implementation class for accepting connection from client.
- *  			  A ConnectionAcceptor handles all TCP connection requests from clients
- *  			  through listening TCP socket (SOCK_Acceptor) on a particular address.
+ *          A ConnectionAcceptor handles all TCP connection requests from clients
+ *          through listening TCP socket (SOCK_Acceptor) on a particular address.
  * =====================================================================================
  */
 class ConnectionAcceptor : public EventHandler {
@@ -178,24 +178,24 @@ public:
  * =====================================================================================
  *        Class:  StreamHandler
  *  Description:  StreamHandler receives and processes data from clients.
- *  			  After connection is accepted, StreamHandler is responsible
- *  			  for handling data from client. Each StreamHandler object is in charge
- *  			  of handling data stream from a particular TCP connection (SOCK_Stream)
+ *          After connection is accepted, StreamHandler is responsible
+ *          for handling data from client. Each StreamHandler object is in charge
+ *          of handling data stream from a particular TCP connection (SOCK_Stream)
  * =====================================================================================
  */
 struct SipMsgBuff{
-	char	mBigBuff[SIP_MSG_MAX_SIZE];
-	bool	mIsReadingBody;
-	int 	mRemainBodyLen;
+  char  mBigBuff[SIP_MSG_MAX_SIZE];
+  bool  mIsReadingBody;
+  int   mRemainBodyLen;
 };
 
 class StreamHandler : public EventHandler {
 private:
   //Receives data from a connected client
-  SOCK_Stream*		mSockStream;
+  SOCK_Stream*    mSockStream;
   //Store process-wide Reactor instance
-  Reactor*			mReactor;
-  struct SipMsgBuff	mSipMsg;
+  Reactor*      mReactor;
+  struct SipMsgBuff mSipMsg;
 
 public:
   StreamHandler(SOCK_Stream* stream, Reactor* reactor);
@@ -219,10 +219,10 @@ protected:
  */
 class DgramHandler : public EventHandler {
 private:
-  SOCK_Datagram*		mSockDgram;
-  Reactor*			mReactor;
+  SOCK_Datagram*    mSockDgram;
+  Reactor*      mReactor;
 
-public:	
+public: 
   DgramHandler(const INET_Addr& addr, Reactor* reactor);
   ~DgramHandler();
   virtual void mHandleEvent(SOCKET sockfd, EventType et);

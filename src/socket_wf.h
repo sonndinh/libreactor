@@ -1,25 +1,25 @@
 /*
  * =====================================================================================
- *  FILENAME	:  SocketWF.h
- *  DESCRIPTION	:  This file defines Wrapper Facades classes for Socket APIs.
- *  			   It is used to hide some UNIX/POSIX and Win32 Socket APIs.
- *  			   Classes:
- *  	 - INET_Addr: encapsulates IPv4 address
+ *  FILENAME  :  SocketWF.h
+ *  DESCRIPTION :  This file defines Wrapper Facades classes for Socket APIs.
+ *           It is used to hide some UNIX/POSIX and Win32 Socket APIs.
+ *           Classes:
+ *     - INET_Addr: encapsulates IPv4 address
  *       - SOCK_Acceptor: connection factory for TCP. It encapsulates listening
- *  	   socket and waiting for request connection from clients. A server just needs
- *  	   one SOCK_Acceptor object for listening to clients on a particular address.
- *  	 - SOCK_Stream: encapsulates connected TCP descriptor and some function
- *  	   for sending and receiving data through that descriptor. Each connected
- *  	   socket corresponds to a SOCK_Stream object.
- *  	 -SOCK_Datagram: encapsulates UDP socket. Server app just needs to instantiate
- *  	  one SOCK_Datagram object for listening all clients on one address.
+ *       socket and waiting for request connection from clients. A server just needs
+ *       one SOCK_Acceptor object for listening to clients on a particular address.
+ *     - SOCK_Stream: encapsulates connected TCP descriptor and some function
+ *       for sending and receiving data through that descriptor. Each connected
+ *       socket corresponds to a SOCK_Stream object.
+ *     -SOCK_Datagram: encapsulates UDP socket. Server app just needs to instantiate
+ *      one SOCK_Datagram object for listening all clients on one address.
  *
- *  VERSION		:  1.0
- *  CREATED		:  12/03/2010 02:25:17 PM
- *  REVISION	:  none
- *  COMPILER	:  g++
- *  AUTHOR		:  Ngoc Son
- *  COPYRIGHT	:  Copyright (c) 2010, Ngoc Son
+ *  VERSION   :  1.0
+ *  CREATED   :  12/03/2010 02:25:17 PM
+ *  REVISION  :  none
+ *  COMPILER  :  g++
+ *  AUTHOR    :  Ngoc Son
+ *  COPYRIGHT :  Copyright (c) 2010, Ngoc Son
  *
  * =====================================================================================
  */
@@ -82,8 +82,8 @@ public:
  * =====================================================================================
  *        Class:  SOCK_Stream
  *  Description:  SOCK_Stream class encapsulates the I/O operations that an 
- *  			  application can invoke on a connected socket handle. 
- *  			  Each SOCK_Stream object is correspond to a TCP connection.
+ *          application can invoke on a connected socket handle. 
+ *          Each SOCK_Stream object is correspond to a TCP connection.
  * =====================================================================================
  */
 class SOCK_Stream {
@@ -141,8 +141,8 @@ public:
  * =====================================================================================
  *        Class:  SOCK_Acceptor
  *  Description:  SOCK_Acceptor is connection factory which accept connect from client
- *  			  and initializes SOCK_Stream object for further I/O operations.
- *  			  This is implementation of TCP listening socket.
+ *          and initializes SOCK_Stream object for further I/O operations.
+ *          This is implementation of TCP listening socket.
  * =====================================================================================
  */
 class SOCK_Acceptor {
@@ -163,7 +163,7 @@ public:
 
   //A second method to initialize a passive-mode acceptor
   //socket, analogously to the constructor
-  void mOpen(const INET_Addr &sock_addr) {			
+  void mOpen(const INET_Addr &sock_addr) {      
   }
 
   //Accept a connection and initialize the SOCK_Stream
@@ -174,7 +174,7 @@ public:
     SOCKET conn = accept(mHandle, (struct sockaddr*)&cliaddr, &clilen);
     //stream->mSetHandle(conn);
     stream->mSetPeer(conn, &cliaddr, clilen);
-    //			pantheios::log_INFORMATIONAL("Set SOCK_Stream with Connection FD: ", pantheios::integer(conn));
+    //      pantheios::log_INFORMATIONAL("Set SOCK_Stream with Connection FD: ", pantheios::integer(conn));
   }
 
   SOCKET mGetHandle() const {
@@ -197,7 +197,7 @@ public:
     mHandle = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     bind(mHandle, addr.mGetAddr(), addr.mGetSize());
   }
-		
+    
   SOCKET mGetHandle() const{
     return mHandle;
   }
