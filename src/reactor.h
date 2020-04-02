@@ -41,8 +41,8 @@ public:
   //NOTE: may be we don't need "handle" parameter in mHandleEvent()
   //because when mHandleEvent() called, it can get associated socket
   //descriptor through SOCK_Acceptor or SOCK_Stream or SOCK_Datagram
-  virtual void mHandleEvent(SOCKET handle, EventType et)=0;
-  virtual SOCKET mGetHandle() const=0;
+  virtual void handle_event(SOCKET handle, EventType et) = 0;
+  virtual SOCKET get_handle() const = 0;
 };
 
 
