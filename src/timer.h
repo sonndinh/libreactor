@@ -23,12 +23,12 @@
 #include <list>
 #include <string.h>
 
-#define MIN_EXPIRE_TIME_MS  500 //minimum input expiration time
-#define COMMON_STEP     250 //each 250 ms, posix timer will fires
-#define INITIAL_TV_SEC  1
-#define INITIAL_TV_NSEC 0
-#define INTERVAL_TV_SEC 0
-#define INTERVAL_TV_NSEC  (COMMON_STEP * 1000000)
+const unsigned int MIN_EXPIRE_TIME_MS = 500; //minimum input expiration time
+const unsigned int COMMON_STEP = 250; //each 250 ms, posix timer will fires
+const unsigned int INITIAL_TV_SEC = 1;
+const unsigned int INITIAL_TV_NSEC = 0;
+const unsigned int INTERVAL_TV_SEC = 0;
+const unsigned int INTERVAL_TV_NSEC = COMMON_STEP * 1000000;
 
 using namespace std;
 typedef enum TimerType {
@@ -48,31 +48,30 @@ typedef enum TimerType {
 } TimerType;
 
 typedef struct SingleTimer {
-  int   mRemainTime; /* in milisecond */
-  TimerType mType;
+  int remain_time; /* in millisecond */
+  TimerType type;
 } SingleTimer;
 
 typedef void (*TimerHandler) (TimerType type);
 
 class TimerList {
-
-private:
-  static TimerList* mInstance;
-  list<SingleTimer> mList;
-  timer_t     mTimerId;
-  TimerHandler  mHandler;
-    
 private:
   TimerList();
   ~TimerList();
 
 public:
-  static TimerList* mGetInstance();
-  bool mRegisterHandler(TimerHandler handler);
-  static void mListener(int signo);
-  bool mAdd(int firedTime, TimerType type);
-  void mDelete(int index);
-  void mRun();
+  static TimerList* get_instance();
+  bool register_handler(TimerHandler handler);
+  static void listener(int signo);
+  bool add(int firedTime, TimerType type);
+  void remove(int index);
+  void run();
+
+private:
+  static TimerList* instance_;
+  list<SingleTimer> list_;
+  timer_t timer_id_;
+  TimerHandler handler_;
 };
 
 #endif // TIMER_H_

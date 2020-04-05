@@ -11,6 +11,8 @@
  *
  * =====================================================================================
  */
+#include <iostream>
+
 #include "reactor_impl.h"
 
 
@@ -22,10 +24,10 @@
  *--------------------------------------------------------------------------------------
  */
 SelectReactorImpl::SelectReactorImpl(){
-  FD_ZERO(&mRdSet);
-  FD_ZERO(&mWrSet);
-  FD_ZERO(&mExSet);
-  mMaxHandle = 0;
+  FD_ZERO(&rdset_);
+  FD_ZERO(&wrset_);
+  FD_ZERO(&exset_);
+  max_handle_ = 0;
 }
 
 SelectReactorImpl::~SelectReactorImpl(){
@@ -38,13 +40,13 @@ SelectReactorImpl::~SelectReactorImpl(){
  * Description:  Waiting for events using select() function
  *--------------------------------------------------------------------------------------
  */
-void SelectReactorImpl::mHandleEvents(Time_Value* timeout){
+void SelectReactorImpl::handle_events(TimeValue* timeout){
   fd_set readset, writeset, exceptset;
-  readset = mRdSet;
-  writeset = mWrSet;
-  exceptset = mExSet;
+  readset = rdset_;
+  writeset = wrset_;
+  exceptset = exset_;
 
-  int result = select(mMaxHandle+1, &readset, &writeset, &exceptset, timeout);
+  int result = select(max_handle_+1, &readset, &writeset, &exceptset, timeout);
   if(result < 0){
     //exit(EXIT_FAILURE);
     perror("select() error");
@@ -52,22 +54,22 @@ void SelectReactorImpl::mHandleEvents(Time_Value* timeout){
   }
   //pantheios::log_INFORMATIONAL("The number of ready events: ", pantheios::integer(result));
 
-  for(SOCKET h=0; h<=mMaxHandle; h++){
+  for(Socket h = 0; h <= max_handle_; h++){
     //We should check for incoming events in each SOCKET
     if(FD_ISSET(h, &readset)){
-      (mTable.mTable[h].mEventHandler)->mHandleEvent(h, READ_EVENT);
+      (table_.table_[h].event_handler)->handle_event(h, READ_EVENT);
       if(--result <= 0)
         break;
       continue;
     }
     if(FD_ISSET(h, &writeset)){
-      (mTable.mTable[h].mEventHandler)->mHandleEvent(h, WRITE_EVENT);
+      (table_.table_[h].event_handler)->handle_event(h, WRITE_EVENT);
       if(--result <= 0)
         break;
       continue;
     }
     if(FD_ISSET(h, &exceptset)){
-      (mTable.mTable[h].mEventHandler)->mHandleEvent(h, EXCEPT_EVENT);
+      (table_.table_[h].event_handler)->handle_event(h, EXCEPT_EVENT);
       if(--result <= 0)
         break;
       continue;
@@ -116,26 +118,26 @@ void SelectReactorImpl::mHandleEvents(Time_Value* timeout){
  *         object is created, it registers to this object to receive favor events
  *--------------------------------------------------------------------------------------
  */
-void SelectReactorImpl::mRegisterHandler(EventHandler* eh, EventType et){
+void SelectReactorImpl::register_handler(EventHandler* eh, EventType et){
   //Get SOCKET associated with this EventHandler object
-  SOCKET temp = eh->mGetHandle();
-  mTable.mTable[temp].mEventHandler = eh;
-  mTable.mTable[temp].mEventType = et;
+  Socket temp = eh->get_handle();
+  table_.table_[temp].event_handler = eh;
+  table_.table_[temp].event_type = et;
   
   //set maximum handle value
-  if(temp > mMaxHandle)
-    mMaxHandle = temp;
+  if(temp > max_handle_)
+    max_handle_ = temp;
 
   //set appropriate bits to mRdSet, mWrSet and mExSet
   if((et & READ_EVENT) == READ_EVENT)
-    FD_SET(temp, &mRdSet);
+    FD_SET(temp, &rdset_);
   if((et & WRITE_EVENT) == WRITE_EVENT)
-    FD_SET(temp, &mWrSet);
+    FD_SET(temp, &wrset_);
   if((et & EXCEPT_EVENT) == EXCEPT_EVENT)
-    FD_SET(temp, &mExSet);
+    FD_SET(temp, &exset_);
 }
 
-void SelectReactorImpl::mRegisterHandler(SOCKET h, EventHandler* eh, EventType et){
+void SelectReactorImpl::register_handler(Socket h, EventHandler* eh, EventType et){
   //This is temporarily unavailable
 }
 
@@ -148,31 +150,31 @@ void SelectReactorImpl::mRegisterHandler(SOCKET h, EventHandler* eh, EventType e
  *         events to it anymore.
  *--------------------------------------------------------------------------------------
  */
-void SelectReactorImpl::mRemoveHandler(EventHandler* eh, EventType et){
-  SOCKET temp = eh->mGetHandle();
-  mTable.mTable[temp].mEventHandler = NULL;
-  mTable.mTable[temp].mEventType = 0;
+void SelectReactorImpl::remove_handler(EventHandler* eh, EventType et){
+  Socket temp = eh->get_handle();
+  table_.table_[temp].event_handler = nullptr;
+  table_.table_[temp].event_type = 0;
 
   //clear appropriate bits to mRdSet, mWrSet, and mExSet
   if((et & READ_EVENT) == READ_EVENT)
-    FD_CLR(temp, &mRdSet);
+    FD_CLR(temp, &rdset_);
   if((et & WRITE_EVENT) == WRITE_EVENT)
-    FD_CLR(temp, &mWrSet);
+    FD_CLR(temp, &wrset_);
   if((et & EXCEPT_EVENT) == EXCEPT_EVENT)
-    FD_CLR(temp, &mExSet);
+    FD_CLR(temp, &exset_);
 }
 
-void SelectReactorImpl::mRemoveHandler(SOCKET h, EventType et){
-  mTable.mTable[h].mEventHandler = NULL;
-  mTable.mTable[h].mEventType = 0;
+void SelectReactorImpl::remove_handler(Socket h, EventType et){
+  table_.table_[h].event_handler = nullptr;
+  table_.table_[h].event_type = 0;
 
   //clear appropriate bits to mRdSet, mWrSet, and mExSet
   if((et & READ_EVENT) == READ_EVENT)
-    FD_CLR(h, &mRdSet);
+    FD_CLR(h, &rdset_);
   if((et & WRITE_EVENT) == WRITE_EVENT)
-    FD_CLR(h, &mWrSet);
+    FD_CLR(h, &wrset_);
   if((et & EXCEPT_EVENT) == EXCEPT_EVENT)
-    FD_CLR(h, &mExSet);
+    FD_CLR(h, &exset_);
 }
 
 
@@ -184,7 +186,7 @@ void SelectReactorImpl::mRemoveHandler(SOCKET h, EventType et){
  *--------------------------------------------------------------------------------------
  */
 DemuxTable::DemuxTable(){
-  memset(mTable, 0x00, FD_SETSIZE * sizeof(struct Tuple));
+  memset(table_, 0x00, FD_SETSIZE * sizeof(struct Tuple));
 }
 
 DemuxTable::~DemuxTable(){}
@@ -197,17 +199,17 @@ DemuxTable::~DemuxTable(){}
  *         before calling demultiplexing function. It used with select().
  *--------------------------------------------------------------------------------------
  */
-void DemuxTable::mConvertToFdSets(fd_set &readset, fd_set &writeset, fd_set &exceptset, SOCKET &max_handle){
-  for(SOCKET i=0; i<FD_SETSIZE; i++){
-    if(mTable[i].mEventHandler != NULL){
+void DemuxTable::convert_to_fd_sets(fd_set &readset, fd_set &writeset, fd_set &exceptset, Socket &max_handle){
+  for(Socket i = 0; i < FD_SETSIZE; i++){
+    if(table_[i].event_handler != nullptr){
       //We are interested in this socket, so
       //set max_handle to this socket descriptor
       max_handle = i;
-      if((mTable[i].mEventType & READ_EVENT) == READ_EVENT)
+      if((table_[i].event_type & READ_EVENT) == READ_EVENT)
         FD_SET(i, &readset);
-      if((mTable[i].mEventType & WRITE_EVENT) == WRITE_EVENT)
+      if((table_[i].event_type & WRITE_EVENT) == WRITE_EVENT)
         FD_SET(i, &writeset);
-      if((mTable[i].mEventType & EXCEPT_EVENT) == EXCEPT_EVENT)
+      if((table_[i].event_type & EXCEPT_EVENT) == EXCEPT_EVENT)
         FD_SET(i, &exceptset);
     }
   }
@@ -222,13 +224,13 @@ void DemuxTable::mConvertToFdSets(fd_set &readset, fd_set &writeset, fd_set &exc
  *--------------------------------------------------------------------------------------
  */
 PollReactorImpl::PollReactorImpl(){
-  for(int i=0; i<MAXFD; i++){
-    mClient[i].fd = -1;
-    mClient[i].events = 0;
-    mClient[i].revents = 0;
-    mHandler[i] = NULL;
+  for(int i = 0; i < MAXFD; i++){
+    client_[i].fd = -1;
+    client_[i].events = 0;
+    client_[i].revents = 0;
+    handler_[i] = nullptr;
   }
-  mMaxi = 0;
+  maxi_ = 0;
 }
 
 PollReactorImpl::~PollReactorImpl(){
@@ -242,32 +244,32 @@ PollReactorImpl::~PollReactorImpl(){
  *         to corresponding EventHandler object.
  *--------------------------------------------------------------------------------------
  */
-void PollReactorImpl::mHandleEvents(Time_Value* time){
+void PollReactorImpl::handle_events(TimeValue* time){
   int nready, timeout, i;
-  if(time == NULL)
+  if(time == nullptr)
     timeout = -1;
   else
     timeout = (time->tv_sec)*1000 + (time->tv_usec)/1000;
 
-  nready = poll(mClient, mMaxi+1, timeout);
+  nready = poll(client_, maxi_+1, timeout);
   if(nready < 0){
     perror("poll() error");
     return;
   }
 
-  for(i=0; i <= mMaxi; i++){
-    if(mClient[i].fd < 0)
+  for(i = 0; i <= maxi_; i++){
+    if(client_[i].fd < 0)
       continue;
     
-    if((mClient[i].revents & POLLRDNORM)){
+    if((client_[i].revents & POLLRDNORM)){
       //      pantheios::log_INFORMATIONAL("Read event at mClient[", pantheios::integer(i), "]");
-      mHandler[i]->mHandleEvent(mClient[i].fd, READ_EVENT);
+      handler_[i]->handle_event(client_[i].fd, READ_EVENT);
       if(--nready <= 0)
         break;
     }
-    if((mClient[i].revents & POLLWRNORM)){
+    if((client_[i].revents & POLLWRNORM)){
       //      pantheios::log_INFORMATIONAL("Write event at mClient[", pantheios::integer(i), "]");
-      mHandler[i]->mHandleEvent(mClient[i].fd, WRITE_EVENT);
+      handler_[i]->handle_event(client_[i].fd, WRITE_EVENT);
       if(--nready <= 0)
         break;
     }   
@@ -282,21 +284,21 @@ void PollReactorImpl::mHandleEvents(Time_Value* time){
  *         object to register its handler.
  *--------------------------------------------------------------------------------------
  */
-void PollReactorImpl::mRegisterHandler(EventHandler* eh, EventType et){
+void PollReactorImpl::register_handler(EventHandler* eh, EventType et){
   int i;
-  for(i=0; i<MAXFD; i++)
+  for(i = 0; i < MAXFD; i++)
     //First element in array has fd=-1 will be fill
     //with new handler. Then we break out of for loop
-    if(mClient[i].fd == -1){
-      mClient[i].fd = eh->mGetHandle();
-      mClient[i].events = 0; //reset events field
+    if(client_[i].fd == -1){
+      client_[i].fd = eh->get_handle();
+      client_[i].events = 0; //reset events field
 
       if((et & READ_EVENT) == READ_EVENT)
-        mClient[i].events |= POLLRDNORM;
+        client_[i].events |= POLLRDNORM;
       if((et & WRITE_EVENT) == WRITE_EVENT)
-        mClient[i].events |= POLLWRNORM;
+        client_[i].events |= POLLWRNORM;
 
-      mHandler[i] = eh;
+      handler_[i] = eh;
       break;
     }
 
@@ -306,12 +308,13 @@ void PollReactorImpl::mRegisterHandler(EventHandler* eh, EventType et){
   }
 
   //  pantheios::log_INFORMATIONAL("mMaxi: ", pantheios::integer(mMaxi), ". i: ", pantheios::integer(i));
-  if(i > mMaxi)
-    mMaxi = i;  
+  if(i > maxi_)
+    maxi_ = i;  
 }
 
-void PollReactorImpl::mRegisterHandler(SOCKET h, EventHandler* eh, EventType et){
+void PollReactorImpl::register_handler(Socket h, EventHandler* eh, EventType et){
   //Temporary unavailable
+  std::cout << "Method is not implemented!" << std::endl;
 }
 
 /*
@@ -322,22 +325,22 @@ void PollReactorImpl::mRegisterHandler(SOCKET h, EventHandler* eh, EventType et)
  *         it is destructed, so events are no longer dispatched to them.
  *--------------------------------------------------------------------------------------
  */
-void PollReactorImpl::mRemoveHandler(EventHandler* eh, EventType et){
-  for(int i=0; i <= mMaxi; i++){
-    if(mClient[i].fd == eh->mGetHandle()){
-      mClient[i].fd = -1;
-      mClient[i].events = 0;
-      mHandler[i] = NULL;
+void PollReactorImpl::remove_handler(EventHandler* eh, EventType et){
+  for(int i = 0; i <= maxi_; i++){
+    if(client_[i].fd == eh->get_handle()){
+      client_[i].fd = -1;
+      client_[i].events = 0;
+      handler_[i] = nullptr;
       break;
     }
   }
 }
 
-void PollReactorImpl::mRemoveHandler(SOCKET h, EventType et){
-  for(int i=0; i<mMaxi; i++){
-    if(mClient[i].fd == h){
-      mClient[i].fd = -1;
-      mHandler[i] = NULL;
+void PollReactorImpl::remove_handler(Socket h, EventType et){
+  for(int i = 0; i < maxi_; i++){
+    if(client_[i].fd == h){
+      client_[i].fd = -1;
+      handler_[i] = nullptr;
       break;
     }
   }
@@ -353,34 +356,34 @@ void PollReactorImpl::mRemoveHandler(SOCKET h, EventType et){
 #ifdef HAS_DEV_POLL
 
 DevPollReactorImpl::DevPollReactorImpl(){ 
-  mDevpollfd = open("/dev/poll", O_RDWR);
-  if(mDevpollfd < 0) {
+  devpollfd_ = open("/dev/poll", O_RDWR);
+  if(devpollfd_ < 0) {
     //    pantheios::log_INFORMATIONAL("Cannot open /dev/poll !!!");
     exit(EXIT_FAILURE);
   }
 
   //init input array of struct pollfd
-  for(int i=0; i<MAXFD; i++){
-    mBuf[i].fd = -1;
-    mBuf[i].events = 0;
-    mBuf[i].revents = 0;
-    mHandler[i] = NULL;
+  for(int i = 0; i < MAXFD; i++){
+    buf_[i].fd = -1;
+    buf_[i].events = 0;
+    buf_[i].revents = 0;
+    handler_[i] = nullptr;
   }
 
   //init output array of pollfd has event on
-  mOutput = (struct pollfd*) malloc(sizeof(struct pollfd) * MAXFD);
+  output_ = (struct pollfd*) malloc(sizeof(struct pollfd) * MAXFD);
 }
 
 DevPollReactorImpl::~DevPollReactorImpl(){
-  close(mDevpollfd);
-  if(mOutput != NULL) {
-    free(mOutput);
+  close(devpollfd_);
+  if(output_ != nullptr) {
+    free(output_);
   }
 }
 
-void DevPollReactorImpl::mHandleEvents(Time_Value* time){
+void DevPollReactorImpl::handle_events(TimeValue* time){
   int nready, timeout, i;
-  if(time == NULL) {
+  if(time == nullptr) {
     timeout = -1;
   } else {
     timeout = (time->tv_sec)*1000 + (time->tv_usec)/1000;
@@ -389,45 +392,45 @@ void DevPollReactorImpl::mHandleEvents(Time_Value* time){
   struct dvpoll dopoll;
   dopoll.dp_timeout = timeout;
   dopoll.dp_nfds = MAXFD;
-  dopoll.dp_fds = mOutput;
+  dopoll.dp_fds = output_;
 
   //waiting for events
-  nready = ioctl(mDevpollfd, DP_POLL, &dopoll);
+  nready = ioctl(devpollfd_, DP_POLL, &dopoll);
 
   if(nready < 0) {
     perror("/dev/poll ioctl DP_POLL failed");
     return;
   }
 
-  for(i=0; i<nready; i++) {
-    int temp = (mOutput+i)->fd;
+  for(i = 0; i < nready; i++) {
+    int temp = (output_ + i)->fd;
 
-    if((mOutput + i)->revents & POLLRDNORM) {
-      mHandler[temp]->mHandleEvent(temp, READ_EVENT);
+    if((output_ + i)->revents & POLLRDNORM) {
+      handler_[temp]->handle_event(temp, READ_EVENT);
     }
-    if((mOutput+i)->revents & POLLWRNORM) {
-      mHandler[temp]->mHandleEvent(temp, WRITE_EVENT);
+    if((output_ + i)->revents & POLLWRNORM) {
+      handler_[temp]->handle_event(temp, WRITE_EVENT);
     }
   }
 }
 
-void DevPollReactorImpl::mRegisterHandler(EventHandler* eh, EventType et){
-  int temp = eh->mGetHandle();
+void DevPollReactorImpl::register_handler(EventHandler* eh, EventType et){
+  int temp = eh->get_handle();
 
-  for(int i=0; i<MAXFD; i++) {
-    if(mBuf[i].fd < 0) {
-      mBuf[i].fd = eh->mGetHandle();
-      mBuf[i].events = 0; //reset events field
+  for(int i = 0; i < MAXFD; i++) {
+    if(buf_[i].fd < 0) {
+      buf_[i].fd = eh->get_handle();
+      buf_[i].events = 0; //reset events field
 
       if((et & READ_EVENT) == READ_EVENT) {
-        mBuf[i].events |= POLLRDNORM;
+        buf_[i].events |= POLLRDNORM;
       }
       if((et & WRITE_EVENT) == WRITE_EVENT) {
-        mBuf[i].events |= POLLWRNORM;
+        buf_[i].events |= POLLWRNORM;
       }
 
       //handler of a particular descriptor is saved to index has the same value with the descriptor
-      mHandler[temp] = eh;
+      handler_[temp] = eh;
       break;
     }
   }
@@ -438,61 +441,62 @@ void DevPollReactorImpl::mRegisterHandler(EventHandler* eh, EventType et){
   }
 
   //close old mDevpollfd file and open new file rely on new set of pollfds
-  close(mDevpollfd);
-  mDevpollfd = open("/dev/poll", O_RDWR);
-  if(mDevpollfd < 0) {
+  close(devpollfd_);
+  devpollfd_ = open("/dev/poll", O_RDWR);
+  if(devpollfd_ < 0) {
     perror("Cannot open /dev/poll !!!");
     exit(EXIT_FAILURE);
   }
 
-  if(write(mDevpollfd, mBuf, (sizeof(struct pollfd) * MAXFD)) != 
+  if(write(devpollfd_, buf_, (sizeof(struct pollfd) * MAXFD)) != 
      (sizeof(struct pollfd) * MAXFD) ) {
     perror("Failed to write all pollfds");
-    close(mDevpollfd);
-    if(mOutput != null) {
-      free(mOutput);
-      mOutput = NULL;
+    close(devpollfd_);
+    if(output_ != nullptr) {
+      free(output_);
+      output_ = nullptr;
     }
     exit(EXIT_FAILURE);
   }
 }
 
-void DevPollReactorImpl::mRegisterHandler(SOCKET h, EventHandler* eh, EventType et){
+void DevPollReactorImpl::register_handler(Socket h, EventHandler* eh, EventType et){
   //temporarily unavailable
+  std::cout << "Method is not implemented!" << std::endl;
 }
 
-void DevPollReactorImpl::mRemoveHandler(EventHandler* eh, EventType et){
-  int temp = eh->mGetHandle();
-  mRemoveHandler(temp, et);
+void DevPollReactorImpl::remove_handler(EventHandler* eh, EventType et){
+  int temp = eh->get_handle();
+  remove_handler(temp, et);
 }
 
-void DevPollReactorImpl::mRemoveHandler(SOCKET h, EventType et){
+void DevPollReactorImpl::remove_handler(Socket h, EventType et){
 
   //find the pollfd which has the same file descriptor
-  for(int i=0; i<MAXFD; i++) {
-    if(mBuf[i].fd == h) {
-      mBuf[i].fd = -1;
-      mBuf[i].events = 0;
-      mHandler[h] = NULL;
+  for(int i = 0; i < MAXFD; i++) {
+    if(buf_[i].fd == h) {
+      buf_[i].fd = -1;
+      buf_[i].events = 0;
+      handler_[h] = nullptr;
       break;
     }
   }
 
   //rewrite the /dev/poll
-  close(mDevpollfd);
-  mDevpollfd = open("/dev/poll", O_RDWR);
-  if(mDevpollfd < 0) {
+  close(devpollfd_);
+  devpollfd_ = open("/dev/poll", O_RDWR);
+  if(devpollfd_ < 0) {
     perror("Cannot open /dev/poll !!!");
     exit(EXIT_FAILURE);
   }
 
-  if(write(mDevpollfd, mBuf, (sizeof(struct pollfd) * MAXFD)) != 
+  if(write(devpollfd_, buf_, (sizeof(struct pollfd) * MAXFD)) != 
      (sizeof(struct pollfd) * MAXFD) ) {
     perror("Failed to write all pollfds");
-    close(mDevpollfd);
-    if(mOutput != null) {
-      free(mOutput);
-      mOutput = NULL;
+    close(devpollfd_);
+    if(output_ != null) {
+      free(output_);
+      output_ = nullptr;
     }
     exit(EXIT_FAILURE);
   }
@@ -517,12 +521,12 @@ void DevPollReactorImpl::mRemoveHandler(SOCKET h, EventType et){
 #ifdef HAS_EPOLL
 
 EpollReactorImpl::EpollReactorImpl(){
-  for(int i=0; i<MAXFD; i++){
-    mHandler[i] = NULL;
+  for(int i = 0; i < MAXFD; i++){
+    handler_[i] = nullptr;
   }
 
-  mEpollFd = epoll_create(MAXFD);
-  if(mEpollFd < 0){
+  epollfd_ = epoll_create(MAXFD);
+  if(epollfd_ < 0){
     perror("epoll_create");
     exit(EXIT_FAILURE);
   }
@@ -542,31 +546,32 @@ EpollReactorImpl::~EpollReactorImpl(){
  *           it only accepts socket with descriptor number < MAXFD. Ouch !!!
  *--------------------------------------------------------------------------------------
  */
-void EpollReactorImpl::mRegisterHandler(EventHandler* eh, EventType et){
-  SOCKET sockfd = eh->mGetHandle();
+void EpollReactorImpl::register_handler(EventHandler* eh, EventType et){
+  Socket sockfd = eh->get_handle();
   if(sockfd >= MAXFD){
     //    pantheios::log_INFORMATIONAL("Too large file descriptor !!!");
     return;
   }
   
-  struct epoll_event addEvent;
-  addEvent.data.fd = sockfd;
-  addEvent.events = 0; //reset registered events
+  struct epoll_event add_event;
+  add_event.data.fd = sockfd;
+  add_event.events = 0; //reset registered events
 
   if((et & READ_EVENT) == READ_EVENT)   
-    addEvent.events |= EPOLLIN;
+    add_event.events |= EPOLLIN;
   if((et & WRITE_EVENT) == WRITE_EVENT)
-    addEvent.events |= EPOLLOUT;
+    add_event.events |= EPOLLOUT;
   
-  if(epoll_ctl(mEpollFd, EPOLL_CTL_ADD, sockfd, &addEvent) < 0){
+  if(epoll_ctl(epollfd_, EPOLL_CTL_ADD, sockfd, &add_event) < 0){
     perror("epoll_ctl ADD");
     return;
   }
-  mHandler[sockfd] = eh;
+  handler_[sockfd] = eh;
 }
 
-void EpollReactorImpl::mRegisterHandler(SOCKET h, EventHandler* eh, EventType et){
+void EpollReactorImpl::register_handler(Socket h, EventHandler* eh, EventType et){
   //temporarily unavailable
+  std::cout << "Method is not implemented!" << std::endl;
 }
 
 /*
@@ -577,30 +582,31 @@ void EpollReactorImpl::mRegisterHandler(SOCKET h, EventHandler* eh, EventType et
  *         this method.
  *--------------------------------------------------------------------------------------
  */
-void EpollReactorImpl::mRemoveHandler(EventHandler* eh, EventType et){
-  SOCKET sockfd = eh->mGetHandle();
+void EpollReactorImpl::remove_handler(EventHandler* eh, EventType et){
+  Socket sockfd = eh->get_handle();
   if(sockfd >= MAXFD){
     //    pantheios::log_INFORMATIONAL("Bad file descriptor !!!");
     return;
   }
   
-  struct epoll_event rmEvent;
-  rmEvent.data.fd = sockfd;
+  struct epoll_event rm_event;
+  rm_event.data.fd = sockfd;
   if((et & READ_EVENT) == READ_EVENT)
-    rmEvent.events |= EPOLLIN;
+    rm_event.events |= EPOLLIN;
   if((et & WRITE_EVENT) == WRITE_EVENT)
-    rmEvent.events |= EPOLLOUT;
+    rm_event.events |= EPOLLOUT;
 
-  if(epoll_ctl(mEpollFd, EPOLL_CTL_DEL, sockfd, &rmEvent) < 0){
+  if(epoll_ctl(epollfd_, EPOLL_CTL_DEL, sockfd, &rm_event) < 0){
     perror("epoll_ctl DEL");
     return;
   }
 
-  mHandler[sockfd] = NULL;
+  handler_[sockfd] = nullptr;
 }
 
-void EpollReactorImpl::mRemoveHandler(SOCKET h, EventType et){
+void EpollReactorImpl::remove_handler(Socket h, EventType et){
   //temporarily unavailable
+  std::cout << "Method is not implemented!" << std::endl;
 }
 
 /*
@@ -610,27 +616,27 @@ void EpollReactorImpl::mRemoveHandler(SOCKET h, EventType et){
  * Description:  Waiting for events using epoll_wait() function.
  *--------------------------------------------------------------------------------------
  */
-void EpollReactorImpl::mHandleEvents(Time_Value* time){
+void EpollReactorImpl::handle_events(TimeValue* time){
   int nevents;
-  SOCKET temp;
+  Socket temp;
   int timeout;
 
-  if(time == NULL) {
+  if(time == nullptr) {
     timeout = -1;
   } else {
     timeout = (time->tv_sec)*1000 + (time->tv_usec)/1000;
   }
 
-  nevents = epoll_wait(mEpollFd, mEvents, MAXFD, timeout);
+  nevents = epoll_wait(epollfd_, events_, MAXFD, timeout);
   if(nevents < 0){
     perror("epoll_wait");
     return;
   }
 
-  for(int i=0; i<nevents; i++){
-    temp = mEvents[i].data.fd;
-    if((mEvents[i].events & EPOLLIN) == EPOLLIN)
-      mHandler[temp]->mHandleEvent(temp, READ_EVENT);
+  for(int i = 0; i < nevents; i++){
+    temp = events_[i].data.fd;
+    if((events_[i].events & EPOLLIN) == EPOLLIN)
+      handler_[temp]->handle_event(temp, READ_EVENT);
 
     //////////////////////////////////////////////////////////////////////////////////////////
     //NOTE: be careful in following case
@@ -644,8 +650,8 @@ void EpollReactorImpl::mHandleEvents(Time_Value* time){
     //
     // =>> One solution is: Process EPOLLOUT first, before EPOLLIN is processed.
     //////////////////////////////////////////////////////////////////////////////////////////
-    if((mEvents[i].events & EPOLLOUT) == EPOLLOUT)
-      mHandler[temp]->mHandleEvent(temp, WRITE_EVENT);
+    if((events_[i].events & EPOLLOUT) == EPOLLOUT)
+      handler_[temp]->handle_event(temp, WRITE_EVENT);
   }
 }
 
@@ -689,9 +695,9 @@ void EpollReactorImpl::mHandleEvents(Time_Value* time){
  *--------------------------------------------------------------------------------------
  */
 KqueueReactorImpl::KqueueReactorImpl(){
-  mEventsNo = 0;
-
-  if((mKqueue = kqueue()) == -1){
+  events_no_ = 0;
+  kqueue_ = kqueue();
+  if(kqueue_ == -1){
     perror("kqueue() error");
     exit(EXIT_FAILURE);
   }
@@ -708,8 +714,8 @@ KqueueReactorImpl::~KqueueReactorImpl(){
  *         created.
  *--------------------------------------------------------------------------------------
  */
-void KqueueReactorImpl::mRegisterHandler(EventHandler* eh, EventType et){
-  SOCKET temp = eh->mGetHandle();
+void KqueueReactorImpl::register_handler(EventHandler* eh, EventType et){
+  Socket temp = eh->get_handle();
   struct kevent event;
   u_short flags = 0;
 
@@ -726,15 +732,16 @@ void KqueueReactorImpl::mRegisterHandler(EventHandler* eh, EventType et){
   
   EV_SET(&event, temp, flags, EV_ADD | EV_ENABLE, 0, 0, eh);
 
-  if(kevent(mKqueue, &event, 1, NULL, 0, NULL) == -1){
+  if(kevent(kqueue_, &event, 1, NULL, 0, NULL) == -1){
     perror("kevent() error");
     return;
   }
 
-  mEventsNo++;
+  events_no_++;
 }
 
-void KqueueReactorImpl::mRegisterHandler(SOCKET h, EventHandler* eh, EventType et){
+void KqueueReactorImpl::register_handler(Socket h, EventHandler* eh, EventType et){
+  std::cout << "Method is not implemented!" << std::endl;
 }
 
 /*
@@ -744,8 +751,8 @@ void KqueueReactorImpl::mRegisterHandler(SOCKET h, EventHandler* eh, EventType e
  * Description:  Remove existing socket in kqueue. 
  *--------------------------------------------------------------------------------------
  */
-void KqueueReactorImpl::mRemoveHandler(EventHandler* eh, EventType et){
-  SOCKET temp = eh->mGetHandle();
+void KqueueReactorImpl::remove_handler(EventHandler* eh, EventType et){
+  Socket temp = eh->get_handle();
   struct kevent event;
   u_short flags = 0;
 
@@ -756,15 +763,16 @@ void KqueueReactorImpl::mRemoveHandler(EventHandler* eh, EventType et){
 
   EV_SET(&event, temp, flags, EV_DELETE, 0, 0, 0);
 
-  if(kevent(mKqueue, &event, 1, NULL, 0, NULL) == -1){
+  if(kevent(kqueue_, &event, 1, NULL, 0, NULL) == -1){
     perror("kevent() error");
     return;
   }
 
-  mEventsNo--;
+  events_no_--;
 }
 
-void KqueueReactorImpl::mRemoveHandler(SOCKET h, EventType et){
+void KqueueReactorImpl::remove_handler(Socket h, EventType et){
+  std::cout << "Method is not implemented!" << std::endl;
 }
 
 /*
@@ -774,35 +782,35 @@ void KqueueReactorImpl::mRemoveHandler(SOCKET h, EventType et){
  * Description:  Waiting for events come to sockets in kqueue
  *--------------------------------------------------------------------------------------
  */
-void KqueueReactorImpl::mHandleEvents(Time_Value* time){
+void KqueueReactorImpl::handle_events(TimeValue* time){
   int nevents;
-  struct kevent ev[mEventNo];
+  struct kevent ev[events_no_];
   struct timespec* tout;
 
-  if(time == NULL)
-    tout = NULL;
+  if(time == nullptr)
+    tout = nullptr;
   else{
     tout = new timespec;
     tout->tv_sec = time->tv_sec;
     tout->tv_nsec = time->tv_usec*1000;
   }
 
-  nevents = kevent(mKqueue, NULL, 0, ev, mEventsNo, tout);
+  nevents = kevent(kqueue_, NULL, 0, ev, events_no_, tout);
   if(nevents < 0){
-    if(tout != NULL) 
+    if(tout != nullptr)
       delete tout;
     perror("kevent() error");
     return;
   }
   
-  if(tout != NULL)
+  if(tout != nullptr)
     delete tout;
 
-  for(int i=0; i<nevents; i++){
+  for(int i = 0; i < nevents; i++){
     if(ev[i].filter == EVFILT_READ)
-      (EventHandler*)ev[i].udata->mHandleEvent(ev[i].ident, READ_EVENT);
+      (EventHandler*)ev[i].udata->handle_event(ev[i].ident, READ_EVENT);
     if(ev[i].filter == EVFILT_WRITE)
-      (EventHandler*)ev[i].udata->mHandleEvent(ev[i].ident, WRITE_EVENT);
+      (EventHandler*)ev[i].udata->handle_event(ev[i].ident, WRITE_EVENT);
   }
 }
 

@@ -62,7 +62,7 @@ void ConnectionAcceptor::handle_event(Socket h, EventType et){
 
     //call accept() to accept connect from client
     //and set valid handle for SOCK_Stream
-    sock_acceptor_->accept(client);
+    sock_acceptor_->accept_sock(client);
     //Dynamic allocate new StreamHandler object.
     //Pass it created SOCK_Stream object and process-wide Reactor instance
     //It is FREED when client close its connection to server (FIN is sent)
@@ -350,7 +350,8 @@ void DgramHandler::handle_read(Socket sockfd){
   struct sockaddr_in cliaddr;
   socklen_t clilen = sizeof(cliaddr);
 
-  if((n = sock_dgram_->recvfrom(buff, sizeof(buff), 0, (struct sockaddr*)&cliaddr, &clilen)) < 0){
+  n = sock_dgram_->recv_from(buff, sizeof(buff), 0, (struct sockaddr*)&cliaddr, &clilen);
+  if(n < 0){
     //    pantheios::log_INFORMATIONAL("Get UDP message fail !!!");
     return;
   }
@@ -372,11 +373,9 @@ Socket DgramHandler::get_handle() const{
   return sock_dgram_->get_handle();
 }
 
+Reactor* Reactor::reactor_ = nullptr;
 
-
-Reactor* Reactor::sReactor = NULL;
-
-ReactorImpl* Reactor::sReactorImpl = NULL;
+ReactorImpl* Reactor::reactor_impl_ = nullptr;
 
 /*
  *--------------------------------------------------------------------------------------
@@ -385,24 +384,24 @@ ReactorImpl* Reactor::sReactorImpl = NULL;
  * Description:  It just transfers the call to a concrete implementation of Reactor.
  *--------------------------------------------------------------------------------------
  */
-void Reactor::mRegisterHandler(EventHandler* eh, EventType et){
-  sReactorImpl->mRegisterHandler(eh, et);
+void Reactor::register_handler(EventHandler* eh, EventType et){
+  reactor_impl_->register_handler(eh, et);
 }
 
-void Reactor::mRegisterHandler(SOCKET h, EventHandler* eh, EventType et){
-  sReactorImpl->mRegisterHandler(h, eh, et);
+void Reactor::register_handler(Socket h, EventHandler* eh, EventType et){
+  reactor_impl_->register_handler(h, eh, et);
 }
 
-void Reactor::mRemoveHandler(EventHandler* eh, EventType et){
-  sReactorImpl->mRemoveHandler(eh, et);
+void Reactor::remove_handler(EventHandler* eh, EventType et){
+  reactor_impl_->remove_handler(eh, et);
 }
 
-void Reactor::mRemoveHandler(SOCKET h, EventType et){
-  sReactorImpl->mRemoveHandler(h, et);
+void Reactor::remove_handler(Socket h, EventType et){
+  reactor_impl_->remove_handler(h, et);
 }
 
-ReactorImpl* Reactor::mGetReactorImpl(){
-  return sReactorImpl;
+ReactorImpl* Reactor::get_reactor_impl(){
+  return reactor_impl_;
 }
 
 /*
@@ -412,8 +411,8 @@ ReactorImpl* Reactor::mGetReactorImpl(){
  * Description:  Call to demultiplexer to wait for events.
  *--------------------------------------------------------------------------------------
  */
-void Reactor::mHandleEvents(Time_Value* timeout){
-  sReactorImpl->mHandleEvents(timeout);
+void Reactor::handle_events(TimeValue* timeout){
+  reactor_impl_->handle_events(timeout);
 }
 
 
@@ -429,42 +428,42 @@ void Reactor::mHandleEvents(Time_Value* timeout){
  *         It just return pointer to solely Reactor instance for caller.
  *--------------------------------------------------------------------------------------
  */
-Reactor* Reactor::sInstance(DemuxType demux){
-  if(sReactor == NULL){
+Reactor* Reactor::instance(DemuxType demux){
+  if(reactor_ == nullptr){
     switch (demux){
     case SELECT_DEMUX:
-      sReactorImpl = new SelectReactorImpl();
+      reactor_impl_ = new SelectReactorImpl();
       break;
     case POLL_DEMUX:
-      sReactorImpl = new PollReactorImpl();
+      reactor_impl_ = new PollReactorImpl();
       break;
 
 #ifdef HAS_DEV_POLL
     case DEVPOLL_DEMUX:
-      sReactorImpl = new DevPollReactorImpl();
+      reactor_impl_ = new DevPollReactorImpl();
       break;
 #endif
-
+      
 #ifdef HAS_EPOLL
     case EPOLL_DEMUX:
-      sReactorImpl = new EpollReactorImpl();
+      reactor_impl_ = new EpollReactorImpl();
       break;
 #endif
-        
+      
 #ifdef HAS_KQUEUE
     case KQUEUE_DEMUX:
-      sReactorImpl = new KqueueReactorImpl();
+      reactor_impl_ = new KqueueReactorImpl();
       break;
 #endif
-
+      
     default: break;
     }
 
     //use "lazy" initialization to sReactor
     //new object is just created at first time calling of sInstance()
-    sReactor = new Reactor();
+    reactor_ = new Reactor();
   }
-  return sReactor;
+  return reactor_;
 }
 
 /*
@@ -476,12 +475,12 @@ Reactor* Reactor::sInstance(DemuxType demux){
  *--------------------------------------------------------------------------------------
  */
 Reactor::Reactor(){
-  mTCPReadHandler = NULL;
-  mTCPEventHandler = NULL;
-  mUDPReadHandler = NULL;
-  mUDPEventHandler = NULL;
+  tcp_read_handler_ = nullptr;
+  tcp_event_handler_ = nullptr;
+  udp_read_handler_ = nullptr;
+  udp_event_handler_ = nullptr;
 }
 
 Reactor::~Reactor(){
-  delete sReactorImpl;
+  delete reactor_impl_;
 }

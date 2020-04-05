@@ -13,86 +13,86 @@
  */
 #include "timer.h"
 
-TimerList* TimerList::mInstance = NULL;
+TimerList* TimerList::instance_ = nullptr;
 
 TimerList::TimerList() {
   timer_t timer;
 
-  if(timer_create(CLOCK_REALTIME, NULL, &timer)) {
+  if(timer_create(CLOCK_REALTIME, nullptr, &timer)) {
     perror("timer_create");
   }
-  mTimerId = timer;
+  timer_id_ = timer;
 }
 
 TimerList::~TimerList() {
-  timer_delete(mTimerId);
+  timer_delete(timer_id_);
 }
 
-TimerList* TimerList::mGetInstance() {
-  if(mInstance == NULL) {
-    mInstance = new TimerList();
+TimerList* TimerList::get_instance() {
+  if(instance_ == nullptr) {
+    instance_ = new TimerList();
   }
-  return mInstance;
+  return instance_;
 }
 
-bool TimerList::mRegisterHandler(TimerHandler handler) {
-  if(handler == NULL) {
+bool TimerList::register_handler(TimerHandler handler) {
+  if(handler == nullptr) {
     return false;
   }
 
-  mHandler = handler;
+  handler_ = handler;
   return true;
 }
 
-bool TimerList::mAdd(int firedTime /* in milisecond */, TimerType type) {
+bool TimerList::add(int fired_time /* in milisecond */, TimerType type) {
   if(firedTime < MIN_EXPIRE_TIME_MS) {
     return false;
   }
 
   struct SingleTimer timer;
-  timer.mRemainTime = firedTime;
-  timer.mType = type;
-  mList.push_back(timer);
+  timer.remain_time = fired_time;
+  timer.type = type;
+  list_.push_back(timer);
   return true;
 }
 
-void TimerList::mDelete(int index) {
+void TimerList::remove(int index) {
 
 }
 
-void TimerList::mListener(int signo) {
-  TimerList* myself = TimerList::mGetInstance();
-  list<SingleTimer>* tempList = &(myself->mList);
+void TimerList::listener(int signo) {
+  TimerList* myself = TimerList::get_instance();
+  list<SingleTimer>* temp_list = &(myself->list_);
   list<SingleTimer>::iterator iter;
   
-  if(tempList->size() == 0) {
+  if(temp_list->size() == 0) {
     return;
   }
 
-  for(iter = tempList->begin(); iter != tempList->end(); iter++) {
-    iter->mRemainTime = iter->mRemainTime - COMMON_STEP;
-    if(iter->mRemainTime <= 0) {
-      myself->mHandler(iter->mType);
+  for(iter = temp_list->begin(); iter != temp_list->end(); iter++) {
+    iter->remain_time = iter->remain_time - COMMON_STEP;
+    if(iter->remain_time <= 0) {
+      myself->handler_(iter->type);
       //remove element has mRemainTime <= 0
-      iter = tempList->erase(iter);
+      iter = temp_list->erase(iter);
     }
   }
 }
 
-void TimerList::mRun() {
+void TimerList::run() {
   struct itimerspec ts;
   ts.it_interval.tv_sec = INTERVAL_TV_SEC;
   ts.it_interval.tv_nsec = INTERVAL_TV_NSEC; /*COMMON_STEP * 1000000; //Timer fire each 0.25 second.*/
   ts.it_value.tv_sec = INITIAL_TV_SEC;  //current fire time is 5s
   ts.it_value.tv_nsec = INITIAL_TV_NSEC;
 
-  signal(SIGALRM, mListener);
-  if(timer_settime(mTimerId, 0, &ts, NULL)) {
+  signal(SIGALRM, listener);
+  if(timer_settime(timer_id_, 0, &ts, NULL)) {
     perror("timer_settime");
     return;
   }
 
-  while(mList.size() != 0) {
+  while(list_.size() != 0) {
     pause();
   }
 }

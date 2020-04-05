@@ -16,6 +16,7 @@
 
 #include <stdio.h>
 #include <poll.h>
+#include <cstddef>
 
 #include "socket_wf.h"
 #include "reactor_type.h"
@@ -26,10 +27,10 @@ class EventHandler;
 struct Tuple {
   //pointer to Event_Handler that processes the events arriving
   //on the handle
-  EventHandler* mEventHandler;
+  EventHandler* event_handler;
   //bitmask that tracks which types of events <Event_Handler>
   //is registered for
-  EventType mEventType;
+  EventType event_type;
 };
 
 
@@ -46,13 +47,13 @@ class DemuxTable {
 public:
   DemuxTable();
   ~DemuxTable();
-  void mConvertToFdSets(fd_set &readset, fd_set &writeset, fd_set &exceptset, SOCKET &max_handle);
+  void convert_to_fd_sets(fd_set &readset, fd_set &writeset, fd_set &exceptset, Socket &max_handle);
     
 public:
   //because the number of file descriptors can be demultiplexed by
   //select() is limited by FD_SETSIZE constant so this table is indexed
   //up to FD_SETSIZE
-  struct Tuple mTable[FD_SETSIZE];
+  struct Tuple table_[FD_SETSIZE];
 };
 
 
@@ -70,13 +71,12 @@ public:
  * =====================================================================================
  */
 class ReactorImpl {
-
 public:
-  virtual void mRegisterHandler(EventHandler* eh, EventType et)=0;
-  virtual void mRegisterHandler(SOCKET h, EventHandler* eh, EventType et)=0;
-  virtual void mRemoveHandler(EventHandler* eh, EventType et)=0;
-  virtual void mRemoveHandler(SOCKET h, EventType et)=0;
-  virtual void mHandleEvents(Time_Value* timeout=NULL)=0;
+  virtual void register_handler(EventHandler* eh, EventType et)=0;
+  virtual void register_handler(Socket h, EventHandler* eh, EventType et)=0;
+  virtual void remove_handler(EventHandler* eh, EventType et)=0;
+  virtual void remove_handler(Socket h, EventType et)=0;
+  virtual void handle_events(TimeValue* timeout=nullptr)=0;
 };
 
 ////////////////////////////////////////////////////////
@@ -93,20 +93,20 @@ public:
  * =====================================================================================
  */
 class SelectReactorImpl : public ReactorImpl {
-private:
-  DemuxTable mTable;
-  fd_set  mRdSet, mWrSet, mExSet;
-  int   mMaxHandle;
-  
 public:
   SelectReactorImpl();
   ~SelectReactorImpl();
 
-  void mRegisterHandler(EventHandler* eh, EventType et);
-  void mRegisterHandler(SOCKET h, EventHandler* eh, EventType et);
-  void mRemoveHandler(EventHandler* eh, EventType et);
-  void mRemoveHandler(SOCKET h, EventType et);
-  void mHandleEvents(Time_Value* timeout=NULL);
+  void register_handler(EventHandler* eh, EventType et);
+  void register_handler(Socket h, EventHandler* eh, EventType et);
+  void remove_handler(EventHandler* eh, EventType et);
+  void remove_handler(Socket h, EventType et);
+  void handle_events(TimeValue* timeout=nullptr);
+
+private:
+  DemuxTable table_;
+  fd_set  rdset_, wrset_, exset_;
+  int   max_handle_;
 };
 
 
@@ -117,20 +117,20 @@ public:
  * =====================================================================================
  */
 class PollReactorImpl : public ReactorImpl {
-private:
-  struct pollfd mClient[MAXFD];
-  EventHandler* mHandler[MAXFD];
-  int mMaxi;
-
 public:
   PollReactorImpl();
   ~PollReactorImpl();
 
-  void mRegisterHandler(EventHandler* eh, EventType et);
-  void mRegisterHandler(SOCKET h, EventHandler* eh, EventType et);
-  void mRemoveHandler(EventHandler* eh, EventType et);
-  void mRemoveHandler(SOCKET h, EventType et);
-  void mHandleEvents(Time_Value* timeout=NULL);
+  void register_handler(EventHandler* eh, EventType et);
+  void register_handler(Socket h, EventHandler* eh, EventType et);
+  void remove_handler(EventHandler* eh, EventType et);
+  void remove_handler(Socket h, EventType et);
+  void handle_events(TimeValue* timeout=nullptr);
+
+private:
+  struct pollfd client_[MAXFD];
+  EventHandler* handler_[MAXFD];
+  int maxi_;
 };
 
 /*
@@ -147,22 +147,23 @@ public:
 #include <sys/devpoll.h>
 
 class DevPollReactorImpl : public ReactorImpl {
-private:
-  int mDevpollfd;
-  struct pollfd mBuf[MAXFD]; //input interested file descriptors
-  struct pollfd* mOutput;    //file descriptors has event
-  EventHandler* mHandler[MAXFD]; //keep track of handler for each file descriptor
-    
 public:
   DevPollReactorImpl();
   ~DevPollReactorImpl();
 
-  void mRegisterHandler(EventHandler* eh, EventType et);
-  void mRegisterHandler(SOCKET h, EventHandler* eh, EventType et);
-  void mRemoveHandler(EventHandler* eh, EventType et);
-  void mRemoveHandler(SOCKET h, EventType et);
-  void mHandleEvents(Time_Value* timeout=NULL);
+  void register_handler(EventHandler* eh, EventType et);
+  void register_handler(Socket h, EventHandler* eh, EventType et);
+  void remove_handler(EventHandler* eh, EventType et);
+  void remove_handler(Socket h, EventType et);
+  void handle_events(TimeValue* timeout=nullptr);
+
+private:
+  int devpollfd_;
+  struct pollfd buf_[MAXFD]; //input interested file descriptors
+  struct pollfd* output_;    //file descriptors has event
+  EventHandler* handler_[MAXFD]; //keep track of handler for each file descriptor
 };
+
 #endif // HAS_DEV_POLL
 
 /*
@@ -175,20 +176,20 @@ public:
 #include <sys/epoll.h>
 
 class EpollReactorImpl : public ReactorImpl {
-private:
-  int   mEpollFd;
-  struct epoll_event  mEvents[MAXFD];//Output from epoll_wait()
-  EventHandler*   mHandler[MAXFD];
-    
 public:
   EpollReactorImpl();
   ~EpollReactorImpl();
 
-  void mRegisterHandler(EventHandler* eh, EventType et);
-  void mRegisterHandler(SOCKET h, EventHandler* eh, EventType et);
-  void mRemoveHandler(EventHandler* eh, EventType et);
-  void mRemoveHandler(SOCKET h, EventType et);
-  void mHandleEvents(Time_Value* timeout=NULL);
+  void register_handler(EventHandler* eh, EventType et);
+  void register_handler(Socket h, EventHandler* eh, EventType et);
+  void remove_handler(EventHandler* eh, EventType et);
+  void remove_handler(Socket h, EventType et);
+  void handle_events(TimeValue* timeout=nullptr);
+
+private:
+  int epollfd_;
+  struct epoll_event events_[MAXFD];//Output from epoll_wait()
+  EventHandler* handler_[MAXFD];
 };
 
 #endif // HAS_EPOLL
@@ -205,20 +206,21 @@ public:
 #include <sys/types.h>
 
 class KqueueReactorImpl : public ReactorImpl {
-private:
-  int mKqueue;  //Kqueue identifier
-  int mEventsNo;  //The number of descriptors we are expecting events occur on.
-
 public:
   KqueueReactorImpl();
   ~KqueueReactorImpl();
     
-  void mRegisterHandler(EventHandler* eh, EventType et);
-  void mRegisterHandler(SOCKET h, EventHandler* eh, EventType et);
-  void mRemoveHandler(EventHandler* eh, EventType et);
-  void mRemoveHandler(SOCKET h, EventType et);
-  void mHandleEvents(Time_Value* timeout=NULL);
+  void register_handler(EventHandler* eh, EventType et);
+  void register_handler(Socket h, EventHandler* eh, EventType et);
+  void remove_handler(EventHandler* eh, EventType et);
+  void remove_handler(Socket h, EventType et);
+  void handle_events(TimeValue* timeout=nullptr);
+
+private:
+  int kqueue_;  //Kqueue identifier
+  int events_no_;  //The number of descriptors we are expecting events occur on.
 };
+
 #endif // HAS_KQUEUE
 
 #endif // REACTOR_IMPL_H_

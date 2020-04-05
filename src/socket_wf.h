@@ -31,6 +31,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdio.h>
+
 #include "reactor_type.h"
 
 
@@ -163,7 +164,7 @@ public:
   }
 
   //Accept a connection and initialize the SOCK_Stream
-  void accept(SockStream* stream) {
+  void accept_sock(SockStream* stream) {
     struct sockaddr_in cliaddr;
     socklen_t clilen = sizeof(cliaddr);
 
@@ -189,9 +190,6 @@ private:
  * =====================================================================================
  */
 class SockDatagram {
-private:
-  Socket handle_;
-
 public:
   SockDatagram(const InetAddr& addr){
     handle_ = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
@@ -209,6 +207,9 @@ public:
   ssize_t send_to(const void* buff, size_t nbytes, int flags, const struct sockaddr* to, socklen_t len){
     return sendto(handle_, buff, nbytes, flags, to, len);
   }
+
+private:
+  Socket handle_;
 };
 
 #endif // SOCKET_WF_H_
