@@ -116,7 +116,7 @@ public:
    *  Description:  Main loop for handling incoming events
    * =====================================================================================
    */
-  void handle_events(Time_Value* timeout=nullptr);
+  void handle_events(TimeValue* timeout=nullptr);
   
   /* 
    * ===  FUNCTION  ======================================================================
@@ -157,7 +157,7 @@ public:
   ~ConnectionAcceptor();
 
   virtual void handle_event(Socket handle, EventType et);
-  virtual SOCKET get_handle() const;
+  virtual Socket get_handle() const;
   
 private:
   //Socket factory that accepts client connections

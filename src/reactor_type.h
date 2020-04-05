@@ -29,7 +29,7 @@ typedef unsigned short EventType;
 typedef unsigned int Handle;
 typedef int Socket; //file descriptor for socket
 const int INVALID_HANDLE_VALUE = -1;
-typedef struct timeval Time_Value;
+typedef struct timeval TimeValue;
 
 enum {  
       ACCEPT_EVENT = 0x0001,
@@ -61,21 +61,21 @@ typedef enum {
               TCPStateFDMAX,
               TCPStateRSVD,
               TCPStateBADDATA
-} TCPState;
+} TcpState;
 
 typedef enum {
               UDPStateINIT,
               UDPStateLISTEN
-} UDPState;
+} UdpState;
 
 
 //User's callback functions for Stream transport protocol (TCP) events
 typedef void (*ReactorStreamHandleRead)(Socket socket, char* message, ssize_t msglen);
-typedef void (*ReactorStreamHandleEvent)(Socket socket, TCPState state);
+typedef void (*ReactorStreamHandleEvent)(Socket socket, TcpState state);
 
 //User's callback functions for Datagram transport protocol (UDP) events
 typedef void (*ReactorDgramHandleRead)(struct sockaddr_in peeraddr, char* message, ssize_t msglen);
-typedef void (*ReactorDgramHandleEvent)(UDPState state);
+typedef void (*ReactorDgramHandleEvent)(UdpState state);
 
 //User's callback functions for timer events
 typedef void (*ReactorHandleTimer)();
