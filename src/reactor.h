@@ -21,6 +21,7 @@
 #include <errno.h>
 #include <ctype.h>
 #include <string.h>
+
 #include "socket_wf.h"
 #include "reactor_type.h"
 #include "reactor_impl.h"
@@ -153,7 +154,7 @@ protected:
  */
 class ConnectionAcceptor : public EventHandler {
 public:
-  ConnectionAcceptor(const INET_Addr &addr, Reactor* reactor);
+  ConnectionAcceptor(const InetAddr &addr, Reactor* reactor);
   ~ConnectionAcceptor();
 
   virtual void handle_event(Socket handle, EventType et);
@@ -161,7 +162,7 @@ public:
   
 private:
   //Socket factory that accepts client connections
-  SOCK_Acceptor* sock_acceptor_;
+  SockAcceptor* sock_acceptor_;
   
   //Cached Reactor
   Reactor* reactor_;
@@ -192,7 +193,7 @@ struct SipMsgBuff{
 
 class StreamHandler : public EventHandler {
 public:
-  StreamHandler(SOCK_Stream* stream, Reactor* reactor);
+  StreamHandler(SockStream* stream, Reactor* reactor);
   ~StreamHandler();
   
   virtual void handle_event(Socket handle, EventType et);
@@ -206,7 +207,7 @@ protected:
 
 private:
   //Receives data from a connected client
-  SOCK_Stream* sock_stream_;
+  SockStream* sock_stream_;
   //Store process-wide Reactor instance
   Reactor* reactor_;
   struct SipMsgBuff sip_msg_;
@@ -221,7 +222,7 @@ private:
  */
 class DgramHandler : public EventHandler {
 public: 
-  DgramHandler(const INET_Addr& addr, Reactor* reactor);
+  DgramHandler(const InetAddr& addr, Reactor* reactor);
   ~DgramHandler();
   
   virtual void handle_event(Socket sockfd, EventType et);
@@ -233,7 +234,7 @@ protected:
   virtual void handle_except(Socket sockfd);
 
 private:
-  SOCK_Datagram* sock_dgram_;
+  SockDatagram* sock_dgram_;
   Reactor* reactor_;
 };
 

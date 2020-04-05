@@ -21,12 +21,12 @@
  * Description:  Constructor which register handler to Reactor
  *--------------------------------------------------------------------------------------
  */
-ConnectionAcceptor::ConnectionAcceptor(const INET_Addr &addr, Reactor* reactor){
-  mReactor = reactor;
-  mSockAcceptor = new SOCK_Acceptor(addr);
+ConnectionAcceptor::ConnectionAcceptor(const InetAddr &addr, Reactor* reactor){
+  reactor_ = reactor;
+  sock_acceptor_ = new SockAcceptor(addr);
   //Because connection request from client is also READ_EVENT,
   //so we register the event for this object to Reactor
-  reactor->mRegisterHandler(this, READ_EVENT);
+  reactor->register_handler(this, READ_EVENT);
 }
 
 
@@ -40,8 +40,8 @@ ConnectionAcceptor::ConnectionAcceptor(const INET_Addr &addr, Reactor* reactor){
 
 ConnectionAcceptor::~ConnectionAcceptor(){
   //Remove this handler from Reactor's Demux table
-  mReactor->mRemoveHandler(this, READ_EVENT);
-  delete mSockAcceptor;
+  reactor_->remove_handler(this, READ_EVENT);
+  delete sock_acceptor_;
 }
 
 
@@ -53,20 +53,20 @@ ConnectionAcceptor::~ConnectionAcceptor(){
  *         from clients.
  *--------------------------------------------------------------------------------------
  */
-void ConnectionAcceptor::mHandleEvent(SOCKET h, EventType et){
+void ConnectionAcceptor::handle_event(Socket h, EventType et){
   //  pantheios::log_INFORMATIONAL("Connection request from client !");
   if((et & READ_EVENT) == READ_EVENT){
     //Init new SOCK_Stream with invalid handle.
     //It is FREED in StreamHandler's destructor
-    SOCK_Stream* client = new SOCK_Stream();
+    SockStream* client = new SockStream();
 
     //call accept() to accept connect from client
     //and set valid handle for SOCK_Stream
-    mSockAcceptor->mAccept(client);
+    sock_acceptor_->accept(client);
     //Dynamic allocate new StreamHandler object.
     //Pass it created SOCK_Stream object and process-wide Reactor instance
     //It is FREED when client close its connection to server (FIN is sent)
-    StreamHandler* handler = new StreamHandler(client, mReactor);
+    StreamHandler* handler = new StreamHandler(client, reactor_);
   }
 }
 
@@ -78,8 +78,8 @@ void ConnectionAcceptor::mHandleEvent(SOCKET h, EventType et){
  * Description:  Interface to get socket associated with ConnectionAcceptor object
  *--------------------------------------------------------------------------------------
  */
-SOCKET ConnectionAcceptor::mGetHandle() const {
-  return mSockAcceptor->mGetHandle();
+Socket ConnectionAcceptor::get_handle() const {
+  return sock_acceptor_->get_handle();
 }
 
 
@@ -90,14 +90,15 @@ SOCKET ConnectionAcceptor::mGetHandle() const {
  * Description:  Constructor which register this handler to Reactor.
  *--------------------------------------------------------------------------------------
  */
-StreamHandler::StreamHandler(SOCK_Stream* stream, Reactor* reactor){
+StreamHandler::StreamHandler(SockStream* stream, Reactor* reactor){
   //TODO: can we use assignment operator for reference variable
-  mSockStream = stream;
-  mReactor = reactor;
-  reactor->mRegisterHandler(this, READ_EVENT);
-  memset(mSipMsg.mBigBuff, 0x00, sizeof(mSipMsg.mBigBuff));
-  mSipMsg.mIsReadingBody = false;
-  mSipMsg.mRemainBodyLen = 0;
+  sock_stream_ = stream;
+  reactor_ = reactor;
+  reactor->register_handler(this, READ_EVENT);
+  
+  memset(sip_msg_.big_buff, 0x00, sizeof(sip_msg_.big_buff));
+  sip_msg_.is_reading_body = false;
+  sip_msg_.remain_body_len = 0;
 }
 
 /*
@@ -110,10 +111,10 @@ StreamHandler::StreamHandler(SOCK_Stream* stream, Reactor* reactor){
  */
 StreamHandler::~StreamHandler(){    
   //Remove itself from demultiplexer table of Reactor
-  mReactor->mRemoveHandler(this, READ_EVENT);
+  reactor_->remove_handler(this, READ_EVENT);
   //former action requires socket descriptor which get from mSockStream
   //so we remove this SOCK_Stream object latter
-  delete mSockStream;
+  delete sock_stream_;
 }
 
 /*
@@ -123,18 +124,18 @@ StreamHandler::~StreamHandler(){
  * Description:  Handler of StreamHandler class. It processes data sent from clients.
  *--------------------------------------------------------------------------------------
  */
-void StreamHandler::mHandleEvent(SOCKET h, EventType et){
+void StreamHandler::handle_event(Socket h, EventType et){
   //  pantheios::log_INFORMATIONAL("Receiving data from client !");
   if((et & READ_EVENT) == READ_EVENT){
     //save received data to internal buffer
     //then, process it
-    mHandleRead(h);
+    handle_read(h);
   }else if((et & WRITE_EVENT) == WRITE_EVENT){
-    mHandleWrite(h);
+    handle_write(h);
   }else if((et & EXCEPT_EVENT) == EXCEPT_EVENT){
     //This object is allocated by ConnectionAcceptor object, so
     //we deallocate it here if event is CLOSE
-    mHandleExcept(h);
+    handle_except(h);
   }
 }
 
@@ -145,8 +146,8 @@ void StreamHandler::mHandleEvent(SOCKET h, EventType et){
  * Description:  Interface to get handle associated with a particular StreamHandler object
  *--------------------------------------------------------------------------------------
  */
-SOCKET StreamHandler::mGetHandle() const {
-  return mSockStream->mGetHandle();
+Socket StreamHandler::get_handle() const {
+  return sock_stream_->get_handle();
 }
 
 /*
@@ -158,10 +159,10 @@ SOCKET StreamHandler::mGetHandle() const {
  *         until to delimiter of data stream.
  *--------------------------------------------------------------------------------------
  */
-void StreamHandler::mHandleRead(SOCKET handle){
+void StreamHandler::handle_read(Socket handle){
   ssize_t n;
   int contlen_value;
-  bool isValid = false;   //Check Content-Length value is valid or not
+  bool is_valid = false;   //Check Content-Length value is valid or not
   char buff[TEMP_MSG_SIZE]; //buffer for each time read from kernel
   char* emptyline, *contlen_begin, *contlen_end;
   memset(buff, 0x00, sizeof(buff));
@@ -171,73 +172,73 @@ void StreamHandler::mHandleRead(SOCKET handle){
   //// Read until the end of body, save to big buff and
   //// return to user's callback function.
   /////////////////////////////////////////////////////////
-  if(mSipMsg.mIsReadingBody == true){
-    if(mSipMsg.mRemainBodyLen > TEMP_MSG_SIZE)
+  if(sip_msg_.is_reading_body == true){
+    if(sip_msg_.remain_body_len > TEMP_MSG_SIZE)
       n = read(handle, buff, sizeof(buff));
     else
-      n = read(handle, buff, mSipMsg.mRemainBodyLen);
+      n = read(handle, buff, sip_msg_.remain_body_len);
 
-    if((n<0 && errno==ECONNRESET) || (n==0)){
-      mHandleClose(handle);
+    if((n < 0 && errno == ECONNRESET) || (n == 0)) {
+      handle_close(handle);
       return;
     }
-    if(n < mSipMsg.mRemainBodyLen)
-      mSipMsg.mRemainBodyLen = mSipMsg.mRemainBodyLen - n;
-    strncat(mSipMsg.mBigBuff, buff, strlen(buff));
+    if(n < sip_msg_.remain_body_len)
+      sip_msg_.remain_body_len = sip_msg_.remain_body_len - n;
+    strncat(sip_msg_.big_buff, buff, strlen(buff));
 
     //Call to user's callback function
     //mReactor->mGetReactorImpl()->mTCPReadHandler(handle, mSipMsg.mBigBuff, strlen(mSipMsg.mBigBuff));
-    mReactor->mTCPReadHandler(handle, mSipMsg.mBigBuff, strlen(mSipMsg.mBigBuff));
+    reactor_->tcp_read_handler_(handle, sip_msg_.big_buff, strlen(sip_msg_.big_buff));
 
-    memset(mSipMsg.mBigBuff, 0x00, sizeof(mSipMsg.mBigBuff));
-    mSipMsg.mIsReadingBody = false;
-    mSipMsg.mRemainBodyLen = 0;
+    memset(sip_msg_.big_buff, 0x00, sizeof(sip_msg_.big_buff));
+    sip_msg_.is_reading_body = false;
+    sip_msg_.remain_body_len = 0;
 
     //////////////////////////////////////////////////////////////
     //// We are still reading headers. If we found empty line,
     //// save these header bytes and move to read body. Else,
     //// save all read header bytes to big buff and continue read
     //////////////////////////////////////////////////////////////
-  }else if(mSipMsg.mIsReadingBody == false){
+  }else if(sip_msg_.is_reading_body == false){
     n = read(handle, buff, sizeof(buff));
-    if((n<0 && errno==ECONNRESET) || (n==0)){
-      mHandleClose(handle);
+    if((n < 0 && errno == ECONNRESET) || (n == 0)){
+      handle_close(handle);
       return;
     }
     if((emptyline = strstr(buff, "\r\n\r\n")) != NULL){
       //      pantheios::log_INFORMATIONAL("Found empty line");
-      mSipMsg.mIsReadingBody = true;
-      int m = (emptyline+4-&buff[0]);
-      strncat(mSipMsg.mBigBuff, buff, m);
-      int l = strlen(mSipMsg.mBigBuff);
+      sip_msg_.is_reading_body = true;
+      int m = (emptyline + 4 - &buff[0]);
+      strncat(sip_msg_.big_buff, buff, m);
+      int l = strlen(sip_msg_.big_buff);
       char inter[l+1];
-      strncpy(inter, mSipMsg.mBigBuff, l);
+      strncpy(inter, sip_msg_.big_buff, l);
       inter[l+1] = '\0';
 
-      for(int j=0; j<l; j++)
+      for(int j = 0; j < l; j++)
         inter[j] = tolower(inter[j]);
         
       if((contlen_begin = strstr(inter, "content-length")) == NULL){
         if((contlen_begin = strstr(inter, "\r\nl")) == NULL){
           //          pantheios::log_INFORMATIONAL("Not found Content-Length header");
-          mHandleClose(handle);
+          handle_close(handle);
           return;
         }
       }
 
       //pantheios::log_INFORMATIONAL("Found Content-Length");
       if((contlen_end = strstr(contlen_begin, "\r\n")) != NULL){
-        for(int i=0; i<((contlen_end-contlen_begin)/sizeof(char)); i++){
+        for(int i = 0; i < ((contlen_end-contlen_begin)/sizeof(char)); i++){
           if(isdigit(*(contlen_begin + i))){
             contlen_value = atoi(contlen_begin + i);
-            isValid = true;
+            is_valid = true;
             break;
           }         
         }
-        if(isValid == false) {
+        if(is_valid == false) {
           //handle invalid Content-Length value case
           //pantheios::log_INFORMATIONAL("Invalid Content Length !!!");
-          mHandleClose(handle);
+          handle_close(handle);
           return;
         }
       }
@@ -248,24 +249,24 @@ void StreamHandler::mHandleRead(SOCKET handle){
       //NOTE: buff[] can also contain a beginning of subsequent message with current message
       //we are reading. So we need to save this message for further reading.
       if(contlen_value > (n-m)){
-        strncat(mSipMsg.mBigBuff, emptyline+4, (n-m));
-        mSipMsg.mRemainBodyLen = mSipMsg.mRemainBodyLen - (n-m);
+        strncat(sip_msg_.big_buff, emptyline+4, (n-m));
+        sip_msg_.remain_body_len = sip_msg_.remain_body_len - (n-m);
       }else{
         //if (n-m) > contlen_value, it means that there are bytes of other
         //message in buff[], we need to save this bytes for that message.
-        strncat(mSipMsg.mBigBuff, emptyline+4, contlen_value);
+        strncat(sip_msg_.big_buff, emptyline+4, contlen_value);
 
         //Call to user's callback function
         //mReactor->mGetReactorImpl()->mTCPReadHandler(handle, mSipMsg.mBigBuff, strlen(mSipMsg.mBigBuff));
-        mReactor->mTCPReadHandler(handle, mSipMsg.mBigBuff, strlen(mSipMsg.mBigBuff));
+        reactor_->tcp_read_handler_(handle, sip_msg_.big_buff, strlen(sip_msg_.big_buff));
 
-        memset(mSipMsg.mBigBuff, 0x00, sizeof(mSipMsg.mBigBuff));
-        mSipMsg.mIsReadingBody = false;
-        mSipMsg.mRemainBodyLen = 0;
+        memset(sip_msg_.big_buff, 0x00, sizeof(sip_msg_.big_buff));
+        sip_msg_.is_reading_body = false;
+        sip_msg_.remain_body_len = 0;
       }
     }else{
       //Empty line is not present in buff[]. Save buff to mBigBuff
-      strncat(mSipMsg.mBigBuff, buff, n);
+      strncat(sip_msg_.big_buff, buff, n);
     }
   }
 }
@@ -279,7 +280,7 @@ void StreamHandler::mHandleRead(SOCKET handle){
  *--------------------------------------------------------------------------------------
  */
 
-void StreamHandler::mHandleWrite(SOCKET handle){
+void StreamHandler::handle_write(Socket handle){
   //we can ignore this event because we just register READ_EVENT to Reactor
 }
 
@@ -290,7 +291,7 @@ void StreamHandler::mHandleWrite(SOCKET handle){
  * Description:  Called by mHandleRead() when it is needed to close this socket.
  *--------------------------------------------------------------------------------------
  */
-void StreamHandler::mHandleClose(SOCKET handle){
+void StreamHandler::handle_close(Socket handle){
   //delete this makes destructor is called and this object is freed
   //
   //NOTE: Do not use "delete this" for class that can be instantiated
@@ -307,7 +308,7 @@ void StreamHandler::mHandleClose(SOCKET handle){
  * Description:  Handle other events
  *--------------------------------------------------------------------------------------
  */
-void StreamHandler::mHandleExcept(SOCKET handle){
+void StreamHandler::handle_except(Socket handle){
   //we can ignore this event because we just register READ_EVENT to Reactor
 }
 
@@ -320,55 +321,55 @@ void StreamHandler::mHandleExcept(SOCKET handle){
  * Description:  
  *--------------------------------------------------------------------------------------
  */
-DgramHandler::DgramHandler(const INET_Addr& addr, Reactor* reactor){
-  mSockDgram = new SOCK_Datagram(addr);
-  mReactor = reactor;
-  reactor->mRegisterHandler(this, READ_EVENT);
+DgramHandler::DgramHandler(const InetAddr& addr, Reactor* reactor){
+  sock_dgram_ = new SockDatagram(addr);
+  reactor_ = reactor;
+  reactor->register_handler(this, READ_EVENT);
 }
 
 DgramHandler::~DgramHandler(){
   //Removing handler need to get socket descriptor from mSockDgram,
   //so we must delete mSockDgram after calling mRemoveHandler.
-  mReactor->mRemoveHandler(this, READ_EVENT);
-  delete mSockDgram;
+  reactor_->remove_handler(this, READ_EVENT);
+  delete sock_dgram_;
 }
 
-void DgramHandler::mHandleEvent(SOCKET sockfd, EventType et){
+void DgramHandler::handle_event(Socket sockfd, EventType et){
   if((et & READ_EVENT) == READ_EVENT){
-    mHandleRead(sockfd);
+    handle_read(sockfd);
   }else if((et & WRITE_EVENT) == WRITE_EVENT){
-    mHandleWrite(sockfd);
+    handle_write(sockfd);
   }else if((et & EXCEPT_EVENT) == EXCEPT_EVENT){
-    mHandleExcept(sockfd);
+    handle_except(sockfd);
   }
 }
 
-void DgramHandler::mHandleRead(SOCKET sockfd){
+void DgramHandler::handle_read(Socket sockfd){
   char buff[SIP_UDP_MSG_MAX_SIZE];
   ssize_t n;
   struct sockaddr_in cliaddr;
   socklen_t clilen = sizeof(cliaddr);
 
-  if((n=mSockDgram->mRecvfrom(buff, sizeof(buff), 0, (struct sockaddr*)&cliaddr, &clilen)) < 0){
+  if((n = sock_dgram_->recvfrom(buff, sizeof(buff), 0, (struct sockaddr*)&cliaddr, &clilen)) < 0){
     //    pantheios::log_INFORMATIONAL("Get UDP message fail !!!");
     return;
   }
 
   //check whether end-of-message reach or not. If not reach, may be message is larger than
   //3kB. We send error response in this case. If reach end of msg, transfer to user's callback
-  mReactor->mUDPReadHandler(cliaddr, buff, n);
+  reactor_->udp_read_handler_(cliaddr, buff, n);
 }
 
-void DgramHandler::mHandleWrite(SOCKET sockfd){
+void DgramHandler::handle_write(Socket sockfd){
   //We can ignore this method because we just register READ_EVENT to Reactor
 }
 
-void DgramHandler::mHandleExcept(SOCKET sockfd){
+void DgramHandler::handle_except(Socket sockfd){
   //We can ignore this method because we just register READ_EVENT to Reactor
 }
 
-SOCKET DgramHandler::mGetHandle() const{
-  return mSockDgram->mGetHandle();
+Socket DgramHandler::get_handle() const{
+  return sock_dgram_->get_handle();
 }
 
 
