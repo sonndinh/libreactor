@@ -11,8 +11,8 @@
  *
  * =====================================================================================
  */
-#ifndef REACTOR_TYPE_H_
-#define REACTOR_TYPE_H_
+#ifndef COMMON_H_
+#define COMMON_H_
 
 #include <sys/time.h>
 
@@ -31,7 +31,7 @@ typedef int Socket; //file descriptor for socket
 const int INVALID_HANDLE_VALUE = -1;
 typedef struct timeval TimeValue;
 
-enum {  
+enum {
       ACCEPT_EVENT = 0x0001,
       READ_EVENT = 0x0002,
       WRITE_EVENT = 0x0004,
@@ -80,4 +80,11 @@ typedef void (*ReactorDgramHandleEvent)(UdpState state);
 //User's callback functions for timer events
 typedef void (*ReactorHandleTimer)();
 
-#endif // REACTOR_TYPE_H_
+struct SipMsgBuff{
+  char big_buff[SIP_MSG_MAX_SIZE];
+  bool is_reading_body;
+  int remain_body_len;
+};
+
+
+#endif // COMMON_H_

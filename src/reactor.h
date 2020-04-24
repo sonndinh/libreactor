@@ -31,27 +31,15 @@ class ReactorImpl;
 
 /*
  * =====================================================================================
- *        Class:  EventHandler
- *  Description:  Following class is single handler methods of Event_Handler.
- *          Method in this class are called when events come. It is abstract
- *          base class for handling events so we cannot instantiate it
- * =====================================================================================
- */
-class EventHandler {
-public:
-  //NOTE: may be we don't need "handle" parameter in mHandleEvent()
-  //because when mHandleEvent() called, it can get associated socket
-  //descriptor through SOCK_Acceptor or SOCK_Stream or SOCK_Datagram
-  virtual void handle_event(Socket handle, EventType et) = 0;
-  virtual Socket get_handle() const = 0;
-};
-
-
-/*
- * =====================================================================================
  *        Class:  Reactor
  *  Description:  Reactor is in charge of demultiplexing and dispatching events
  * =====================================================================================
+ */
+
+/**
+ * @class Reactor
+ *
+ * @brief Demultiplex and dispatch events to concrete event handlers.
  */
 class Reactor {
 protected:
@@ -143,99 +131,5 @@ protected:
   static Reactor* reactor_;
 };
 
-
-/*
- * =====================================================================================
- *        Class:  ConnectionAcceptor
- *  Description:  Implementation class for accepting connection from client.
- *          A ConnectionAcceptor handles all TCP connection requests from clients
- *          through listening TCP socket (SOCK_Acceptor) on a particular address.
- * =====================================================================================
- */
-class ConnectionAcceptor : public EventHandler {
-public:
-  ConnectionAcceptor(const InetAddr &addr, Reactor* reactor);
-  ~ConnectionAcceptor();
-
-  virtual void handle_event(Socket handle, EventType et);
-  virtual Socket get_handle() const;
-  
-private:
-  //Socket factory that accepts client connections
-  SockAcceptor* sock_acceptor_;
-  
-  //Cached Reactor
-  Reactor* reactor_;
-};
-
-//SOCK_Acceptor handles factory enables a ConnectionAcceptor object
-//to accept connection indications on a passive-mode socket handle that is
-//listening on a transport endpoint. When a connection arrives from a client,
-//the SOCK_Acceptor accepts the connection passively and produces an initialized
-//SOCK_Stream. The SOCK_Stream is then uses TCP to transfer data reliably between 
-//the client and the server.
-
-
-/*
- * =====================================================================================
- *        Class:  StreamHandler
- *  Description:  StreamHandler receives and processes data from clients.
- *          After connection is accepted, StreamHandler is responsible
- *          for handling data from client. Each StreamHandler object is in charge
- *          of handling data stream from a particular TCP connection (SOCK_Stream)
- * =====================================================================================
- */
-struct SipMsgBuff{
-  char big_buff[SIP_MSG_MAX_SIZE];
-  bool is_reading_body;
-  int remain_body_len;
-};
-
-class StreamHandler : public EventHandler {
-public:
-  StreamHandler(SockStream* stream, Reactor* reactor);
-  ~StreamHandler();
-  
-  virtual void handle_event(Socket handle, EventType et);
-  virtual Socket get_handle() const;
-
-protected:
-  virtual void handle_read(Socket handle);
-  virtual void handle_write(Socket handle);
-  virtual void handle_close(Socket handle);
-  virtual void handle_except(Socket handle);
-
-private:
-  //Receives data from a connected client
-  SockStream* sock_stream_;
-  //Store process-wide Reactor instance
-  Reactor* reactor_;
-  struct SipMsgBuff sip_msg_;
-};
-
-
-/*
- * =====================================================================================
- *        Class:  DgramHandler
- *  Description:  This class wraps functions for handling UDP messages from clients
- * =====================================================================================
- */
-class DgramHandler : public EventHandler {
-public: 
-  DgramHandler(const InetAddr& addr, Reactor* reactor);
-  ~DgramHandler();
-  
-  virtual void handle_event(Socket sockfd, EventType et);
-  virtual Socket get_handle() const;
-
-protected:
-  virtual void handle_read(Socket sockfd);
-  virtual void handle_write(Socket sockfd);
-  virtual void handle_except(Socket sockfd);
-
-private:
-  SockDatagram* sock_dgram_;
-  Reactor* reactor_;
-};
 
 #endif // REACTOR_H_

@@ -183,6 +183,15 @@ private:
   Socket handle_;
 };
 
+//SOCK_Acceptor handles factory enables a ConnectionAcceptor object
+//to accept connection indications on a passive-mode socket handle that is
+//listening on a transport endpoint. When a connection arrives from a client,
+//the SOCK_Acceptor accepts the connection passively and produces an initialized
+//SOCK_Stream. The SOCK_Stream is then uses TCP to transfer data reliably between 
+//the client and the server.
+
+
+
 /*
  * =====================================================================================
  *        Class:  SOCK_Datagram
