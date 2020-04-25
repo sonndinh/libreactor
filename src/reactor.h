@@ -23,7 +23,7 @@
 #include <string.h>
 
 #include "socket_wf.h"
-#include "reactor_type.h"
+#include "common.h"
 #include "reactor_impl.h"
 
 class ReactorImpl;

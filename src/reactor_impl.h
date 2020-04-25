@@ -18,6 +18,19 @@
 #include <poll.h>
 #include <cstddef>
 
+#if defined (HAS_DEV_POLL)
+#include <sys/devpoll.h>
+#endif // HAS_DEV_POLL
+
+#if defined (HAS_EPOLL)
+#include <sys/epoll.h>
+#endif // HAS_EPOLL
+
+#if defined (HAS_KQUEUE)
+#include <sys/event.h>
+#include <sys/types.h>
+#endif // HAS_KQUEUE
+
 #include "socket_wf.h"
 #include "reactor_type.h"
 #include "reactor.h"
@@ -28,20 +41,17 @@ struct Tuple {
   //pointer to Event_Handler that processes the events arriving
   //on the handle
   EventHandler* event_handler;
+
   //bitmask that tracks which types of events <Event_Handler>
   //is registered for
   EventType event_type;
 };
 
 
-/*
- * =====================================================================================
- *        Class:  DemuxTable
- *  Description:  Demultiplexing table contains mapping tuples
- *          <SOCKET, EventHandler, EventType>. This table maintained by
- *          implementing Reactor class so it can dispatch current event with a
- *          particular type to appropriate handler.
- * =====================================================================================
+/**
+ * @brief Demultiplexing table contains mapping tuples
+ * <SOCKET, EventHandler, EventType>. This table is maintained by each
+ * Reactor implementation to dispatch events to correct handlers.
  */
 class DemuxTable {
 public:
@@ -50,47 +60,28 @@ public:
   void convert_to_fd_sets(fd_set &readset, fd_set &writeset, fd_set &exceptset, Socket &max_handle);
     
 public:
-  //because the number of file descriptors can be demultiplexed by
-  //select() is limited by FD_SETSIZE constant so this table is indexed
-  //up to FD_SETSIZE
+  // The maximum number of file descriptors for select() is FD_SETSIZE.
   struct Tuple table_[FD_SETSIZE];
 };
 
 
-/*
- * =====================================================================================
- *        Class:  ReactorImpl
- *  Description:  Interface for implementation of Reactor. It is abstract base class.
- *          User MUST register ReactorStreamHandleRead if they use TCP
- *          User MUST register ReactorDgramHandleRead if they use UDP
- *          ReactorStreamHandleEvent & ReactorDgramHandleEvent can be registered
- *          as user's demand.
- *       Note:  That this pure abstract class just define interfaces for transfering 
- *            read data to callbacks. Transfer event methods to user's callbacks can 
- *            be implemented by derived classes such as SelectReactorImpl,...
- * =====================================================================================
+/**
+ * @brief Interface for Reactor implementations.
+ * User MUST register ReactorStreamHandleRead if they use TCP.
+ * User MUST register ReactorDgramHandleRead if they use UDP.
+ * ReactorStreamHandleEvent & ReactorDgramHandleEvent can be registered as needed.
  */
 class ReactorImpl {
 public:
-  virtual void register_handler(EventHandler* eh, EventType et)=0;
-  virtual void register_handler(Socket h, EventHandler* eh, EventType et)=0;
-  virtual void remove_handler(EventHandler* eh, EventType et)=0;
-  virtual void remove_handler(Socket h, EventType et)=0;
-  virtual void handle_events(TimeValue* timeout=nullptr)=0;
+  virtual void register_handler(EventHandler* eh, EventType et) = 0;
+  virtual void register_handler(Socket h, EventHandler* eh, EventType et) = 0;
+  virtual void remove_handler(EventHandler* eh, EventType et) = 0;
+  virtual void remove_handler(Socket h, EventType et) = 0;
+  virtual void handle_events(TimeValue* timeout=nullptr) = 0;
 };
 
-////////////////////////////////////////////////////////
-//Following classes are concrete classes which implement
-//ReactorImpl interface using select(), poll(), epoll() 
-//, kqueue and /dev/poll demultiplexer
-////////////////////////////////////////////////////////
-
-
-/*
- * =====================================================================================
- *        Class:  SelectReactorImpl
- *  Description:  It uses traditional select() function as demultiplexer
- * =====================================================================================
+/**
+ * @brief Use select() to demultiplex.
  */
 class SelectReactorImpl : public ReactorImpl {
 public:
@@ -110,11 +101,8 @@ private:
 };
 
 
-/*
- * =====================================================================================
- *        Class:  PollReactorImpl
- *  Description:  It uses traditional poll() function as demultiplexer
- * =====================================================================================
+/**
+ * @brief Use poll() to demultiplex.
  */
 class PollReactorImpl : public ReactorImpl {
 public:
@@ -133,19 +121,14 @@ private:
   int maxi_;
 };
 
-/*
- * =====================================================================================
- *        Class:  DevPollReactorImpl
- *  Description:  It uses /dev/poll as demultiplexer. This class is used with Solaris OS.
- *  NOTE     :  - handler of file descriptor x is mHandler[x]
- *          - mBuf[] is array contains list of pollfd struct are currently observed
- *          - mOutput is output of ioctl() function, contains list of pollfds
- *          on which events occur.
- * =====================================================================================
+/**
+ * @brief Use /dev/poll as demultiplexer. This class is used with Solaris OS.
+ * Handler of file descriptor x is handler_[x].
+ * buf_ is an array contains a list of pollfd struct observed.
+ * output_ is output of ioctl() function, containing a list of pollfds
+ * on which events occur.
  */
-#ifdef HAS_DEV_POLL
-#include <sys/devpoll.h>
-
+#if defined (HAS_DEV_POLL)
 class DevPollReactorImpl : public ReactorImpl {
 public:
   DevPollReactorImpl();
@@ -166,15 +149,10 @@ private:
 
 #endif // HAS_DEV_POLL
 
-/*
- * =====================================================================================
- *        Class:  EpollReactorImpl
- *  Description:  It uses Linux's epoll() as demultiplexer
- * =====================================================================================
+/**
+ * @brief Use Linux's epoll() as demultiplexer.
  */
-#ifdef HAS_EPOLL
-#include <sys/epoll.h>
-
+#if defined (HAS_EPOLL)
 class EpollReactorImpl : public ReactorImpl {
 public:
   EpollReactorImpl();
@@ -188,23 +166,16 @@ public:
 
 private:
   int epollfd_;
-  struct epoll_event events_[MAXFD];//Output from epoll_wait()
+  struct epoll_event events_[MAXFD]; // Output from epoll_wait()
   EventHandler* handler_[MAXFD];
 };
 
 #endif // HAS_EPOLL
 
-/*
- * =====================================================================================
- *        Class:  KqueueReactorImpl
- *  Description:  It uses BSD-derived kqueue() as demultiplexer. This class
- *          used for BSD-derived systems such as FreeBSD, NetBSD
- * =====================================================================================
+/**
+ * @brief Use kqueue() (for BSD systems) as demultiplexer.
  */
-#ifdef HAS_KQUEUE
-#include <sys/event.h>
-#include <sys/types.h>
-
+#if defined (HAS_KQUEUE)
 class KqueueReactorImpl : public ReactorImpl {
 public:
   KqueueReactorImpl();
@@ -217,8 +188,8 @@ public:
   void handle_events(TimeValue* timeout=nullptr);
 
 private:
-  int kqueue_;  //Kqueue identifier
-  int events_no_;  //The number of descriptors we are expecting events occur on.
+  int kqueue_; // Kqueue identifier
+  int events_no_; // The number of descriptors we are expecting events occur on.
 };
 
 #endif // HAS_KQUEUE
