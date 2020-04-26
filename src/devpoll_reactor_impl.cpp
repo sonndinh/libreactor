@@ -1,6 +1,5 @@
-#include "reactor_impl.h"
-
 #ifdef HAS_DEV_POLL
+#include "reactor_impl.h"
 
 DevPollReactorImpl::DevPollReactorImpl() {
   devpollfd_ = open("/dev/poll", O_RDWR);
