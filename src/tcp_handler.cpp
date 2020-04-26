@@ -1,6 +1,5 @@
 #include "tcp_handler.h"
 
-
 TcpHandler::TcpHandler(SockStream* stream, Reactor* reactor) {
   // TODO: can we use assignment operator for reference variable
   sock_stream_ = stream;
@@ -25,12 +24,12 @@ TcpHandler::~TcpHandler() {
  * @brief Delegate to the correct handler method.
  */
 void TcpHandler::handle_event(Socket h, EventType et) {
-  if((et & READ_EVENT) == READ_EVENT) {
+  if ((et & READ_EVENT) == READ_EVENT) {
     // Save received data to internal buffer and process it
     handle_read(h);
-  } else if((et & WRITE_EVENT) == WRITE_EVENT) {
+  } else if ((et & WRITE_EVENT) == WRITE_EVENT) {
     handle_write(h);
-  } else if((et & EXCEPT_EVENT) == EXCEPT_EVENT) {
+  } else if ((et & EXCEPT_EVENT) == EXCEPT_EVENT) {
     // This object is allocated by ConnectionAcceptor object, so
     // we deallocate it here if event is CLOSE
     handle_except(h);

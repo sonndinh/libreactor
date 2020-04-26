@@ -14,11 +14,11 @@ UdpHandler::~UdpHandler() {
 }
 
 void UdpHandler::handle_event(Socket sockfd, EventType et) {
-  if((et & READ_EVENT) == READ_EVENT) {
+  if ((et & READ_EVENT) == READ_EVENT) {
     handle_read(sockfd);
-  } else if((et & WRITE_EVENT) == WRITE_EVENT) {
+  } else if ((et & WRITE_EVENT) == WRITE_EVENT) {
     handle_write(sockfd);
-  } else if((et & EXCEPT_EVENT) == EXCEPT_EVENT) {
+  } else if ((et & EXCEPT_EVENT) == EXCEPT_EVENT) {
     handle_except(sockfd);
   }
 }
