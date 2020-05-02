@@ -1,16 +1,3 @@
-/*
- * =====================================================================================
- *  FILENAME  :  ReactorImpl.h
- *  DESCRIPTION :  
- *  VERSION   :  1.0
- *  CREATED   :  12/03/2010 02:24:11 PM
- *  REVISION  :  none
- *  COMPILER  :  g++
- *  AUTHOR    :  Ngoc Son
- *  COPYRIGHT :  Copyright (c) 2010, Ngoc Son
- *
- * =====================================================================================
- */
 #ifndef REACTOR_IMPL_H_
 #define REACTOR_IMPL_H_
 

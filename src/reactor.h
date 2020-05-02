@@ -1,17 +1,3 @@
-/**
- * =====================================================================================
- *  FILENAME  :  Reactor.h
- *  DESCRIPTION :  Reactor class uses Singleton and Bridge pattern to
- *           define abstract interface.
- *  VERSION   :  1.0
- *  CREATED   :  12/03/2010 02:23:12 PM
- *  REVISION  :  none
- *  COMPILER  :  g++
- *  AUTHOR    :  Ngoc Son
- *  COPYRIGHT :  Copyright (c) 2010, Ngoc Son
- *
- * =====================================================================================
- */
 #ifndef REACTOR_H_
 #define REACTOR_H_
 
@@ -32,6 +18,7 @@ class ReactorImpl;
  * @class Reactor
  *
  * @brief Demultiplex and dispatch events to concrete event handlers.
+ * Use Singleton and Bridge patterns to define the interface.
  */
 class Reactor {
 protected:

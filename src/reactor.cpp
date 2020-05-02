@@ -1,16 +1,3 @@
-/*
- * =====================================================================================
- *  FILENAME  :  Reactor.c
- *  DESCRIPTION :  
- *  VERSION   :  1.0
- *  CREATED   :  12/03/2010 02:22:17 PM
- *  REVISION  :  none
- *  COMPILER  :  g++
- *  AUTHOR    :  Ngoc Son
- *  COPYRIGHT :  Copyright (c) 2010, Ngoc Son
- *
- * =====================================================================================
- */
 #include "reactor.h"
 
 Reactor* Reactor::reactor_ = nullptr;

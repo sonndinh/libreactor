@@ -1,27 +1,16 @@
-/*
- * =====================================================================================
- *  FILENAME  :  SocketWF.h
- *  DESCRIPTION :  This file defines Wrapper Facades classes for Socket APIs.
- *           It is used to hide some UNIX/POSIX and Win32 Socket APIs.
- *           Classes:
+/**
+ * This file defines Wrapper Facades classes for Socket APIs.
+ * It is used to hide some UNIX/POSIX and Win32 Socket APIs.
+ * Classes:
  *     - INET_Addr: encapsulates IPv4 address
- *       - SOCK_Acceptor: connection factory for TCP. It encapsulates listening
+ *     - SOCK_Acceptor: connection factory for TCP. It encapsulates listening
  *       socket and waiting for request connection from clients. A server just needs
  *       one SOCK_Acceptor object for listening to clients on a particular address.
  *     - SOCK_Stream: encapsulates connected TCP descriptor and some function
  *       for sending and receiving data through that descriptor. Each connected
  *       socket corresponds to a SOCK_Stream object.
- *     -SOCK_Datagram: encapsulates UDP socket. Server app just needs to instantiate
+ *     - SOCK_Datagram: encapsulates UDP socket. Server app just needs to instantiate
  *      one SOCK_Datagram object for listening all clients on one address.
- *
- *  VERSION   :  1.0
- *  CREATED   :  12/03/2010 02:25:17 PM
- *  REVISION  :  none
- *  COMPILER  :  g++
- *  AUTHOR    :  Ngoc Son
- *  COPYRIGHT :  Copyright (c) 2010, Ngoc Son
- *
- * =====================================================================================
  */
 #ifndef SOCKET_WF_H_
 #define SOCKET_WF_H_
@@ -35,11 +24,10 @@
 #include "reactor_type.h"
 
 
-/*
- * =====================================================================================
- *        Class:  INET_Addr
- *  Description:  INET_Addr class encapsulates Internet address structure
- * =====================================================================================
+/**
+ * @class INET_Addr
+ *
+ * @brief Encapsulates Internet address structure
  */
 class InetAddr { 
 public:
@@ -79,13 +67,11 @@ private:
 };
 
 
-/*
- * =====================================================================================
- *        Class:  SOCK_Stream
- *  Description:  SOCK_Stream class encapsulates the I/O operations that an 
- *          application can invoke on a connected socket handle. 
- *          Each SOCK_Stream object is correspond to a TCP connection.
- * =====================================================================================
+/**
+ * @class SOCK_Stream
+ * @brief SOCK_Stream class encapsulates the I/O operations that an 
+ * application can invoke on a connected socket handle. 
+ * Each SOCK_Stream object is correspond to a TCP connection.
  */
 class SockStream {
 public:
@@ -138,13 +124,11 @@ private:
 };
 
 
-/*
- * =====================================================================================
- *        Class:  SOCK_Acceptor
- *  Description:  SOCK_Acceptor is connection factory which accept connect from client
- *          and initializes SOCK_Stream object for further I/O operations.
- *          This is implementation of TCP listening socket.
- * =====================================================================================
+/**
+ * @class SOCK_Acceptor
+ * @brief SOCK_Acceptor is connection factory which accept connect from client
+ * and initializes SOCK_Stream object for further I/O operations.
+ * This is implementation of TCP listening socket.
  */
 class SockAcceptor {
 public:
@@ -190,13 +174,9 @@ private:
 //SOCK_Stream. The SOCK_Stream is then uses TCP to transfer data reliably between 
 //the client and the server.
 
-
-
-/*
- * =====================================================================================
- *        Class:  SOCK_Datagram
- *  Description:  This class used as wrapper for datagram transport protocol such as UDP
- * =====================================================================================
+/**
+ * @class SOCK_Datagram
+ * @brief This class used as wrapper for datagram transport protocol such as UDP
  */
 class SockDatagram {
 public:

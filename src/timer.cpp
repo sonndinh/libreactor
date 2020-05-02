@@ -1,16 +1,3 @@
-/*
- * =====================================================================================
- *  FILENAME  :  SimpleTimer.c
- *  DESCRIPTION :  
- *  VERSION   :  1.0
- *  CREATED   :  01/18/2011 10:39:57 AM
- *  REVISION  :  none
- *  COMPILER  :  g++
- *  AUTHOR    :  Ngoc Son 
- *  COPYRIGHT :  Copyright (c) 2011, Ngoc Son
- *
- * =====================================================================================
- */
 #include "timer.h"
 
 TimerList* TimerList::instance_ = nullptr;

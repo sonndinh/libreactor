@@ -1,16 +1,6 @@
-/*
- * =====================================================================================
- *  FILENAME  :  SimpleTimer.h
- *  DESCRIPTION :  Simulate multiple timers using advanced Posix timer. This class 
- *           is intended to use for SIP timers.
- *  VERSION   :  1.0
- *  CREATED   :  01/18/2011 10:39:50 AM
- *  REVISION  :  none
- *  COMPILER  :  g++
- *  AUTHOR    :  Ngoc Son
- *  COPYRIGHT :  Copyright (c) 2011, Ngoc Son
- *
- * =====================================================================================
+/**
+ *  Simulate multiple timers using advanced Posix timer. This class 
+ *  is intended to use for SIP timers.
  */
 #ifndef TIMER_H_
 #define TIMER_H_

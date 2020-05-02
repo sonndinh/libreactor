@@ -69,7 +69,6 @@ void KqueueReactorImpl::register_handler(Socket h, EventHandler* eh, EventType e
 
 /**
  * @brief Remove existing socket in kqueue.
- *--------------------------------------------------------------------------------------
  */
 void KqueueReactorImpl::remove_handler(EventHandler* eh, EventType et) {
   Socket temp = eh->get_handle();
@@ -118,7 +117,7 @@ void KqueueReactorImpl::handle_events(TimeValue* time) {
     perror("kevent() error");
     return;
   }
-  
+
   if (tout != nullptr)
     delete tout;
 

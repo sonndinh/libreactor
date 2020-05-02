@@ -18,11 +18,11 @@ public:
 
   virtual void handle_event(Socket handle, EventType et);
   virtual Socket get_handle() const;
-  
+
 private:
   //Socket factory that accepts client connections
   SockAcceptor* sock_acceptor_;
-  
+
   //Cached Reactor
   Reactor* reactor_;
 };
