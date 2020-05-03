@@ -21,7 +21,7 @@
 #include <unistd.h>
 #include <stdio.h>
 
-#include "reactor_type.h"
+#include "common.h"
 
 
 /**
