@@ -1,5 +1,7 @@
 #include "reactor_impl.h"
 
+#include <iostream>
+
 PollReactorImpl::PollReactorImpl() {
   for (int i = 0; i < MAXFD; i++) {
     client_[i].fd = -1;

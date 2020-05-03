@@ -2,9 +2,9 @@
 #define CONNECTION_ACCEPTOR_H_
 
 #include "common.h"
-
-class InetAddr;
-class Reactor;
+#include "socket_wf.h"
+#include "reactor.h"
+#include "event_handler.h"
 
 /**
  * @class ConnectionAcceptor

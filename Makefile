@@ -1,5 +1,5 @@
 GXX = g++
-FLAG = -ggdb
+FLAG = -ggdb -std=c++11
 STATIC_LIB = libreactor.a
 DYNAMIC_LIB = libreactor.dylib
 

@@ -1,4 +1,5 @@
 #include "connection_acceptor.h"
+#include "tcp_handler.h"
 
 ConnectionAcceptor::ConnectionAcceptor(const InetAddr &addr, Reactor* reactor) {
   reactor_ = reactor;
@@ -21,7 +22,7 @@ ConnectionAcceptor::~ConnectionAcceptor() {
 void ConnectionAcceptor::handle_event(Socket h, EventType et) {
   if ((et & READ_EVENT) == READ_EVENT){
     // Init new SOCK_Stream with invalid handle.
-    // It is freed in StreamHandler's destructor
+    // It is freed in TcpHandler's destructor
     SockStream* client = new SockStream();
 
     // Call accept() to accept connections from clients
@@ -29,7 +30,7 @@ void ConnectionAcceptor::handle_event(Socket h, EventType et) {
     sock_acceptor_->accept_sock(client);
     
     // Freed when client close the connection (FIN is sent)
-    StreamHandler* handler = new StreamHandler(client, reactor_);
+    TcpHandler* handler = new TcpHandler(client, reactor_);
   }
 }
 

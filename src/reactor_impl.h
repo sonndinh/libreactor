@@ -21,8 +21,7 @@
 #include "socket_wf.h"
 #include "common.h"
 #include "reactor.h"
-
-class EventHandler;
+#include "event_handler.h"
 
 struct Tuple {
   //pointer to Event_Handler that processes the events arriving

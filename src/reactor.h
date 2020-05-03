@@ -10,7 +10,7 @@
 
 #include "socket_wf.h"
 #include "common.h"
-#include "reactor_impl.h"
+#include "event_handler.h"
 
 class ReactorImpl;
 
@@ -18,7 +18,6 @@ class ReactorImpl;
  * @class Reactor
  *
  * @brief Demultiplex and dispatch events to concrete event handlers.
- * Use Singleton and Bridge patterns to define the interface.
  */
 class Reactor {
 protected:

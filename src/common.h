@@ -57,11 +57,11 @@ typedef enum {
 
 
 //User's callback functions for Stream transport protocol (TCP) events
-typedef void (*ReactorStreamHandleRead)(Socket socket, char* message, ssize_t msglen);
+typedef void (*ReactorStreamHandleRead)(Socket socket, char* message, size_t msglen);
 typedef void (*ReactorStreamHandleEvent)(Socket socket, TcpState state);
 
 //User's callback functions for Datagram transport protocol (UDP) events
-typedef void (*ReactorDgramHandleRead)(struct sockaddr_in peeraddr, char* message, ssize_t msglen);
+typedef void (*ReactorDgramHandleRead)(struct sockaddr_in peeraddr, char* message, size_t msglen);
 typedef void (*ReactorDgramHandleEvent)(UdpState state);
 
 //User's callback functions for timer events
