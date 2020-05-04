@@ -2,11 +2,9 @@
 #define UDP_HANDLER_H_
 
 #include "common.h"
-
-class InetAddr;
-class Reactor;
-class SockDatagram;
-
+#include "event_handler.h"
+#include "socket_wf.h"
+#include "reactor.h"
 
 /**
  * @class UdpHandler

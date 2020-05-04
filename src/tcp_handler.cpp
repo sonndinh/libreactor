@@ -6,9 +6,9 @@ TcpHandler::TcpHandler(SockStream* stream, Reactor* reactor) {
   reactor_ = reactor;
   reactor->register_handler(this, READ_EVENT);
   
-  memset(sip_msg_.big_buff, 0x00, sizeof(sip_msg_.big_buff));
-  sip_msg_.is_reading_body = false;
-  sip_msg_.remain_body_len = 0;
+  //  memset(sip_msg_.big_buff, 0x00, sizeof(sip_msg_.big_buff));
+  //  sip_msg_.is_reading_body = false;
+  //  sip_msg_.remain_body_len = 0;
 }
 
 TcpHandler::~TcpHandler() {
@@ -45,6 +45,7 @@ Socket TcpHandler::get_handle() const {
  * In case of TCP, we need to read until to delimiter of data stream.
  */
 void TcpHandler::handle_read(Socket handle) {
+  /*
   ssize_t n;
   int contlen_value;
   bool is_valid = false;   //Check Content-Length value is valid or not
@@ -154,6 +155,7 @@ void TcpHandler::handle_read(Socket handle) {
       strncat(sip_msg_.big_buff, buff, n);
     }
   }
+  */
 }
 
 

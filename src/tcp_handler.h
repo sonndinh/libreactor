@@ -2,9 +2,9 @@
 #define TCP_HANDLER_H_
 
 #include "common.h"
-
-class Reactor;
-class SockStream;
+#include "event_handler.h"
+#include "reactor.h"
+#include "socket_wf.h"
 
 /**
  * @class TcpHandler

@@ -59,6 +59,8 @@ public:
  */
 class ReactorImpl {
 public:
+  virtual ~ReactorImpl() = 0;
+  
   virtual void register_handler(EventHandler* eh, EventType et) = 0;
   virtual void register_handler(Socket h, EventHandler* eh, EventType et) = 0;
   virtual void remove_handler(EventHandler* eh, EventType et) = 0;

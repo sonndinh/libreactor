@@ -1,4 +1,5 @@
 #include "reactor.h"
+#include "reactor_impl.h"
 
 Reactor* Reactor::reactor_ = nullptr;
 

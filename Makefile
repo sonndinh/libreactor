@@ -6,24 +6,23 @@ DYNAMIC_LIB = libreactor.dylib
 TEST = test
 LIBS = -lreactor -losipparser2 -losip2 -lpthread
 LIBS_PATH = -L./lib -L/usr/local/lib
-#INCLUDE_PATH = -I/usr/local/include/osipparser2 -I/usr/local/include/osip2
 
 OBJECTS = reactor.o reactor_impl.o connection_acceptor.o select_reactor_impl.o \
 					poll_reactor_impl.o epoll_reactor_impl.o devpoll_reactor_impl.o \
-					kqueue_reactor_impl.o tcp_handler.o udp_handler.o timer.o
+					kqueue_reactor_impl.o tcp_handler.o udp_handler.o
 
 .PHONY: lib
-lib: mk_dir $(STATIC_LIB) #$(DYNAMIC_LIB)
+lib: mk_dir $(STATIC_LIB)
+	mv $(OBJECTS) lib
 
 mk_dir:
 	mkdir -p lib
 
 $(STATIC_LIB): $(OBJECTS)
 	ar rcs lib/$(STATIC_LIB) $(OBJECTS)
-	mv $(OBJECTS) lib
 
 $(DYNAMIC_LIB): $(OBJECTS)
-	ld -dylib lib/$(OBJECTS) -o lib/$(DYNAMIC_LIB)
+	ld -dylib $(OBJECTS) -o lib/$(DYNAMIC_LIB)
 
 reactor.o : src/reactor.cpp
 	$(GXX) $(FLAG) -c src/reactor.cpp
@@ -68,4 +67,5 @@ all: lib $(TEST)
 
 .PHONY: clean
 clean:
-	rm lib/$(OBJECTS) lib/$(STATIC_LIB) lib/$(DYNAMIC_LIB) test/$(TEST) test/*.o
+	cd lib && \
+	rm $(OBJECTS) $(STATIC_LIB) $(DYNAMIC_LIB) ../test/$(TEST) ../test/*.o

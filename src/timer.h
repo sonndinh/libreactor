@@ -8,10 +8,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <time.h>
-#include <signal.h>
 #include <list>
 #include <string.h>
+#include <time.h>
+#include <signal.h>
+#include <sys/types.h>
 
 const unsigned int MIN_EXPIRE_TIME_MS = 500; //minimum input expiration time
 const unsigned int COMMON_STEP = 250; //each 250 ms, posix timer will fires
