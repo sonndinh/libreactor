@@ -12,7 +12,7 @@ OBJECTS = reactor.o reactor_impl.o connection_acceptor.o select_reactor_impl.o \
 					kqueue_reactor_impl.o tcp_handler.o udp_handler.o
 
 .PHONY: lib
-lib: mk_dir $(STATIC_LIB)
+lib: mk_dir $(STATIC_LIB) $(DYNAMIC_LIB)
 	mv $(OBJECTS) lib
 
 mk_dir:
@@ -22,7 +22,7 @@ $(STATIC_LIB): $(OBJECTS)
 	ar rcs lib/$(STATIC_LIB) $(OBJECTS)
 
 $(DYNAMIC_LIB): $(OBJECTS)
-	ld -dylib $(OBJECTS) -o lib/$(DYNAMIC_LIB)
+	$(GXX) -dynamiclib $(OBJECTS) -o lib/$(DYNAMIC_LIB)
 
 reactor.o : src/reactor.cpp
 	$(GXX) $(FLAG) -c src/reactor.cpp
